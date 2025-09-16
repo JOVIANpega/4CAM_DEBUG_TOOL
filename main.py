@@ -135,6 +135,10 @@ class FourCamDebugTool:
         # 指令相關
         self.var_command_file = tk.StringVar(value=str(Path('REF') / 'Command.txt'))
         self.var_command_choice = tk.StringVar()
+        self.var_clear_output = tk.BooleanVar(value=True)  # 預設打勾
+
+        # 左側預設字體（含下拉顯示文字）
+        self.left_font = ('Microsoft JhengHei', 11)
 
         # 檔案傳輸
         self.var_src_glob = tk.StringVar(value='/mnt/usr/*.jpg')
@@ -210,16 +214,24 @@ class FourCamDebugTool:
         # 指令控制
         lf_cmd = ttk.LabelFrame(parent, text='指令控制（Command.txt）', padding=8)
         lf_cmd.pack(fill=tk.X, pady=(6, 6))
-        ttk.Label(lf_cmd, text='指令檔').grid(row=0, column=0, sticky=tk.W)
-        ent_cmdfile = ttk.Entry(lf_cmd, textvariable=self.var_command_file, width=42)
+        ttk.Label(lf_cmd, text='指令檔', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
+        ent_cmdfile = ttk.Entry(lf_cmd, textvariable=self.var_command_file, width=42, font=self.left_font)
         ent_cmdfile.grid(row=0, column=1, sticky=tk.W, padx=(6, 0))
         ttk.Button(lf_cmd, text='選擇', command=self.on_pick_command_file).grid(row=0, column=2, padx=(6, 0))
 
-        ttk.Label(lf_cmd, text='指令選擇').grid(row=1, column=0, sticky=tk.W, pady=(6, 0))
-        self.cbo_commands = ttk.Combobox(lf_cmd, textvariable=self.var_command_choice, width=50, state='readonly')
+        ttk.Label(lf_cmd, text='指令選擇', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(6, 0))
+        self.cbo_commands = ttk.Combobox(lf_cmd, textvariable=self.var_command_choice, width=50, state='readonly', font=self.left_font)
         self.cbo_commands.grid(row=1, column=1, columnspan=2, sticky=tk.W, padx=(6, 0), pady=(6, 0))
         self.cbo_commands.bind('<<ComboboxSelected>>', self.on_command_selected)
-        ttk.Button(lf_cmd, text='執行指令', command=self.on_execute_selected_command).grid(row=2, column=2, sticky=tk.E, pady=(6, 0))
+        
+        # 執行指令按鍵和開啟指令表按鍵
+        btn_frame = ttk.Frame(lf_cmd)
+        btn_frame.grid(row=2, column=0, columnspan=3, sticky=tk.E, pady=(6, 0))
+        ttk.Button(btn_frame, text='開啟指令表', command=self.on_open_command_file).pack(side=tk.RIGHT, padx=(6, 0))
+        ttk.Button(btn_frame, text='執行指令', command=self.on_execute_selected_command).pack(side=tk.RIGHT)
+        
+        # 清空輸出選項
+        ttk.Checkbutton(lf_cmd, text='執行新指令時清空輸出', variable=self.var_clear_output).grid(row=3, column=0, columnspan=3, sticky=tk.W, pady=(6, 0))
 
         # 常用 Linux 指令
         lf_manual = ttk.LabelFrame(parent, text='常用 Linux 指令', padding=8)
@@ -231,6 +243,7 @@ class FourCamDebugTool:
             'ls -la / - 列出根目錄詳細資訊', 
             'ls -la /tmp - 列出臨時目錄檔案',
             'ls -la /mnt/usr - 列出使用者目錄檔案',
+            'ls -la /mnt/usr/ - 列出 /mnt/usr/ 所有檔案',
             'pwd - 顯示當前工作目錄',
             'whoami - 顯示當前使用者',
             'uname -a - 顯示系統資訊',
@@ -262,6 +275,10 @@ class FourCamDebugTool:
             'ls -la /tmp/tar - 列出 tar 目錄',
             'ls -la /var/vsp - 列出 VSP 目錄',
             'ls -la /mnt/usr - 列出使用者目錄',
+            'rm -f /mnt/usr/*.jpg - 刪除 /mnt/usr/ JPG 檔',
+            'rm -f /mnt/usr/*.yuv - 刪除 /mnt/usr/ YUV 檔',
+            'rm -f /var/vsp/*.jpg - 刪除 /var/vsp/ JPG 檔',
+            'rm -f /var/vsp/*.yuv - 刪除 /var/vsp/ YUV 檔',
             'ps aux | grep hd_video - 檢查影片錄製程序',
             'ps aux | grep diag - 檢查診斷程序',
             'killall hd_video_record_with_vsp_4dev_smart2_pega_dre - 停止影片錄製',
@@ -277,7 +294,7 @@ class FourCamDebugTool:
         ]
         
         self.var_manual = tk.StringVar(value=self.linux_commands[0])
-        cbo_manual = ttk.Combobox(lf_manual, textvariable=self.var_manual, values=self.linux_commands, width=47, state='readonly')
+        cbo_manual = ttk.Combobox(lf_manual, textvariable=self.var_manual, values=self.linux_commands, width=47, state='readonly', font=self.left_font)
         cbo_manual.grid(row=0, column=0, padx=(0, 6))
         ttk.Button(lf_manual, text='執行', command=self.on_execute_manual).grid(row=0, column=1)
 
@@ -286,7 +303,7 @@ class FourCamDebugTool:
         lf_copy.pack(fill=tk.X, pady=(6, 0))
         
         # 常用檔案路徑下拉選單
-        ttk.Label(lf_copy, text='常用路徑').grid(row=0, column=0, sticky=tk.W)
+        ttk.Label(lf_copy, text='常用路徑', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
         self.var_common_path = tk.StringVar()
         self.common_paths = [
             '選擇常用路徑...',
@@ -302,17 +319,17 @@ class FourCamDebugTool:
             '/var/vsp/*.yml - VSP 設定檔案'
         ]
         cbo_common = ttk.Combobox(lf_copy, textvariable=self.var_common_path, values=self.common_paths, 
-                                 width=45, state='readonly')
+                                 width=45, state='readonly', font=self.left_font)
         cbo_common.grid(row=0, column=1, sticky=tk.W, padx=(6, 0))
         cbo_common.bind('<<ComboboxSelected>>', self.on_common_path_selected)
         
         self._add_labeled_entry(lf_copy, '來源（DUT glob）', self.var_src_glob, 1, width=42)
         
         # 目標資料夾輸入欄和開啟按鍵
-        ttk.Label(lf_copy, text='目標（PC 資料夾）').grid(row=2, column=0, sticky=tk.W)
+        ttk.Label(lf_copy, text='目標（PC 資料夾）', font=self.left_font).grid(row=2, column=0, sticky=tk.W)
         entry_frame = ttk.Frame(lf_copy)
         entry_frame.grid(row=2, column=1, sticky=tk.W, padx=(6, 0))
-        ent_dst = ttk.Entry(entry_frame, textvariable=self.var_dst_dir, width=42)
+        ent_dst = ttk.Entry(entry_frame, textvariable=self.var_dst_dir, width=42, font=self.left_font)
         ent_dst.pack(side=tk.LEFT)
         ttk.Button(entry_frame, text='📁', command=self.on_open_destination_folder, width=3).pack(side=tk.LEFT, padx=(6, 0))
         
@@ -331,12 +348,27 @@ class FourCamDebugTool:
         # 標題 + SSH連線狀態指示器
         top_frame = ttk.Frame(parent)
         top_frame.pack(fill=tk.X)
+        
+        # 回傳內容標題
         ttk.Label(top_frame, text='回傳內容', font=('Microsoft JhengHei', 12, 'bold')).pack(side=tk.LEFT)
         
-        # SSH 連線狀態指示器（替代 LED 信號燈）
+        # SSH 連線狀態指示器（靠近回傳內容文字）
         self.status_indicator = tk.Canvas(top_frame, width=20, height=20, highlightthickness=0)
-        self.status_indicator.pack(side=tk.RIGHT, padx=(10, 0))
+        self.status_indicator.pack(side=tk.LEFT, padx=(8, 0))
         self._update_connection_status('disconnected')
+
+        # 搜尋區塊（右側）
+        search_frame = ttk.Frame(top_frame)
+        search_frame.pack(side=tk.RIGHT)
+        self.var_search = tk.StringVar()
+        self.ent_search = ttk.Entry(search_frame, textvariable=self.var_search, width=18)
+        self.ent_search.pack(side=tk.LEFT, padx=(0, 4))
+        self.btn_search_next = ttk.Button(search_frame, text='搜尋/下一個', command=self.on_search_next)
+        self.btn_search_next.pack(side=tk.LEFT)
+        self.btn_search_clear = ttk.Button(search_frame, text='清除標記', command=self.on_search_clear)
+        self.btn_search_clear.pack(side=tk.LEFT, padx=(4, 0))
+        # 追蹤上一個搜尋位置
+        self._last_search_index = '1.0'
         
         self.txt_output = ScrolledText(parent, width=50, height=30, font=('Consolas', self.font_size))
         self.txt_output.pack(fill=tk.BOTH, expand=True, pady=(6, 0))
@@ -359,6 +391,9 @@ class FourCamDebugTool:
         
         # 特殊指令標籤
         self.txt_output.tag_configure("diag_sn", foreground="purple", font=('Consolas', self.font_size, 'bold'))
+
+        # 搜尋標記（不用背景色，避免影響整體配色規則）
+        self.txt_output.tag_configure("search_hit", foreground="magenta", underline=1, font=('Consolas', self.font_size, 'bold'))
 
     def _update_connection_status(self, status: str) -> None:
         """更新連線狀態指示器"""
@@ -405,8 +440,8 @@ class FourCamDebugTool:
             delattr(self, 'status_tooltip')
 
     def _add_labeled_entry(self, parent: ttk.Frame, label: str, var: tk.StringVar, row: int, width: int = 24, show: str = None) -> ttk.Entry:
-        ttk.Label(parent, text=label).grid(row=row, column=0, sticky=tk.W, pady=2)
-        ent = ttk.Entry(parent, textvariable=var, width=width, show=show)
+        ttk.Label(parent, text=label, font=getattr(self, 'left_font', None)).grid(row=row, column=0, sticky=tk.W, pady=2)
+        ent = ttk.Entry(parent, textvariable=var, width=width, show=show, font=getattr(self, 'left_font', None))
         ent.grid(row=row, column=1, sticky=tk.W, padx=(6, 0), pady=2)
         
         # 添加 Tooltip，並設定動態更新
@@ -457,6 +492,9 @@ class FourCamDebugTool:
                 # 載入字體設定
                 if 'ui' in settings:
                     self.font_size = settings['ui'].get('font_size', 12)
+                    # 載入清空輸出設定
+                    clear_output = settings['ui'].get('clear_output', True)
+                    self.var_clear_output.set(clear_output)
                     
         except Exception as e:
             logging.error(f"載入設定失敗: {e}")
@@ -481,7 +519,8 @@ class FourCamDebugTool:
                     'dst_dir': self.var_dst_dir.get()
                 },
                 'ui': {
-                    'font_size': self.font_size
+                    'font_size': self.font_size,
+                    'clear_output': self.var_clear_output.get()
                 }
             }
             
@@ -520,6 +559,28 @@ class FourCamDebugTool:
             self.var_command_file.set(file_path)
             self._load_commands_from(Path(file_path))
 
+    def on_open_command_file(self) -> None:
+        """開啟指令表檔案"""
+        command_file = self.var_command_file.get()
+        if command_file and Path(command_file).exists():
+            try:
+                # 使用系統預設程式開啟檔案
+                import subprocess
+                import platform
+                
+                if platform.system() == 'Windows':
+                    os.startfile(command_file)
+                elif platform.system() == 'Darwin':  # macOS
+                    subprocess.run(['open', command_file])
+                else:  # Linux
+                    subprocess.run(['xdg-open', command_file])
+                    
+                self._append_output(f'已開啟指令表：{command_file}', 'info')
+            except Exception as e:
+                self._append_output(f'無法開啟指令表：{e}', 'error')
+        else:
+            messagebox.showwarning('提醒', '指令表檔案不存在，請先選擇有效的指令表檔案')
+
     def on_reload_commands(self, *_args) -> None:
         self._load_commands_from(Path(self.var_command_file.get()))
 
@@ -532,6 +593,10 @@ class FourCamDebugTool:
         self._run_bg(self._task_test_connection)
 
     def on_execute_selected_command(self) -> None:
+        # 根據 checkbox 狀態決定是否清空輸出
+        if self.var_clear_output.get():
+            self.txt_output.delete(1.0, tk.END)
+            
         idx = self.cbo_commands.current()
         if 0 <= idx < len(self.current_commands):
             cmd = self.current_commands[idx].command
@@ -544,6 +609,10 @@ class FourCamDebugTool:
         if not selected:
             messagebox.showwarning('提醒', '請選擇指令')
             return
+        
+        # 根據 checkbox 狀態決定是否清空輸出
+        if self.var_clear_output.get():
+            self.txt_output.delete(1.0, tk.END)
         
         # 從選擇的文字中提取指令部分（去掉說明）
         if ' - ' in selected:
@@ -840,12 +909,21 @@ class FourCamDebugTool:
         if not src or not dst:
             messagebox.showwarning('提醒', '請輸入來源與目標路徑')
             return
+            
+        # 根據 checkbox 狀態決定是否清空輸出
+        if self.var_clear_output.get():
+            self.txt_output.delete(1.0, tk.END)
+            
         self._run_bg(lambda: self._task_copy_from_dut(src, dst))
 
     def on_common_path_selected(self, event=None) -> None:
         """處理常用路徑選擇"""
         selected = self.var_common_path.get()
         if selected and selected != '選擇常用路徑...':
+            # 根據 checkbox 狀態決定是否清空輸出
+            if self.var_clear_output.get():
+                self.txt_output.delete(1.0, tk.END)
+                
             # 從選擇的文字中提取路徑部分（去掉說明）
             path = selected.split(' - ')[0]
             self.var_src_glob.set(path)
@@ -908,6 +986,42 @@ class FourCamDebugTool:
     def on_clear_output(self) -> None:
         """清空輸出內容"""
         self.txt_output.delete(1.0, tk.END)
+
+    def on_search_next(self) -> None:
+        """搜尋下一個符合內容，並以 search_hit 標籤高亮。"""
+        query = (self.var_search.get() or '').strip()
+        if not query:
+            return
+        try:
+            # 從上次位置往下找
+            start_idx = self._last_search_index
+            pos = self.txt_output.search(query, start_idx, nocase=True, stopindex=tk.END)
+            if not pos:
+                # 從文件開頭再找一次
+                pos = self.txt_output.search(query, '1.0', nocase=True, stopindex=tk.END)
+                if not pos:
+                    return
+            # 計算結束位置
+            end = f"{pos}+{len(query)}c"
+            # 捲動到可視
+            self.txt_output.see(pos)
+            # 清掉舊的搜尋標記後再加上新的（避免過多標記堆疊）
+            self.txt_output.tag_remove('search_hit', '1.0', tk.END)
+            self.txt_output.tag_add('search_hit', pos, end)
+            # 下一次從當前命中之後繼續
+            self._last_search_index = end
+        except Exception:
+            pass
+
+    def on_search_clear(self) -> None:
+        """清除搜尋標記與狀態。"""
+        try:
+            self.txt_output.tag_remove('search_hit', '1.0', tk.END)
+            self._last_search_index = '1.0'
+            if hasattr(self, 'ent_search') and self.ent_search:
+                self.ent_search.delete(0, tk.END)
+        except Exception:
+            pass
 
     def _on_closing(self) -> None:
         """視窗關閉時的處理"""
@@ -974,6 +1088,8 @@ class FourCamDebugTool:
 
     def _task_exec_command(self, command: str) -> None:
         try:
+            # 顯示送出的指令
+            self._append_output(f'送出指令: {command}', 'info')
             self._append_output(f'$ {command}')
             
             # 確保 SSH 連線正常
@@ -1179,10 +1295,31 @@ class FourCamDebugTool:
         th.start()
 
     def _apply_font_size(self) -> None:
+        """更新所有文字區域的字體大小"""
         try:
+            # 更新基本文字區域字體
             self.txt_output.configure(font=('Consolas', self.font_size))
-        except Exception:
-            pass
+            
+            # 更新所有標籤的字體大小
+            tags = [
+                "success", "error", "warning", "info", "file", "path",
+                "file_yuv", "file_jpg", "file_bin", "file_log", "file_yml", "file_other",
+                "diag_sn", "search_hit"
+            ]
+            
+            for tag in tags:
+                try:
+                    # 獲取現有標籤的設定
+                    current_config = self.txt_output.tag_cget(tag, 'foreground')
+                    if current_config:
+                        # 重新設定標籤，保持顏色但更新字體大小
+                        self.txt_output.tag_configure(tag, foreground=current_config, font=('Consolas', self.font_size, 'bold'))
+                except Exception:
+                    # 如果標籤不存在或設定失敗，跳過
+                    pass
+                    
+        except Exception as e:
+            logging.error(f"更新字體大小失敗: {e}")
 
     def _append_output(self, text: str, tag: str = None) -> None:
         """添加輸出到右側文字區域，支援彩色標籤"""
