@@ -1,0 +1,113 @@
+ˇ˛# -*- coding: utf-8 -*-
+"""
+SSH -äö[\qäFh!jD}
+"""
+import tkinter as tk
+from tkinter import ttk, messagebox
+import re
+
+
+class SSHAccountDialog:
+    """SSH 3^_Ü8èeQ\qäFh"""
+    
+    def __init__(self, parent):
+        self.result = None
+        self.dialog = tk.Toplevel(parent)
+        self.dialog.title("∞eûX SSH 3^_Ü")
+        self.dialog.geometry("300x150")
+        self.dialog.resizable(False, False)
+        
+        # O(uÄT1z
+        ttk.Label(self.dialog, text="O(uÄT1z:").grid(row=0, column=0, sticky="w", padx=10, pady=5)
+        self.username_entry = ttk.Entry(self.dialog, width=20)
+        self.username_entry.grid(row=0, column=1, padx=10, pady=5)
+        
+        # ∆[ºx
+        ttk.Label(self.dialog, text="∆[ºx:").grid(row=1, column=0, sticky="w", padx=10, pady=5)
+        self.password_entry = ttk.Entry(self.dialog, width=20, show="*")
+        self.password_entry.grid(row=1, column=1, padx=10, pady=5)
+        
+        # 	cí
+        button_frame = ttk.Frame(self.dialog)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=10)
+        
+        ttk.Button(button_frame, text="∫xö[", command=self.ok_clicked).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="÷Sàm", command=self.cancel_clicked).pack(side="left", padx=5)
+        
+        self.dialog.transient(parent)
+        self.dialog.grab_set()
+        
+    def ok_clicked(self):
+        username = self.username_entry.get().strip()
+        password = self.password_entry.get().strip()
+        
+        if username:
+            self.result = (username, password)
+            self.dialog.destroy()
+        else:
+            messagebox.showerror("/ì§ä", "Àä8èeQO(uÄT1z")
+    
+    def cancel_clicked(self):
+        self.dialog.destroy()
+
+
+class SSHIPDialog:
+    """SSH IP 0W@W8èeQ\qäFh"""
+    
+    def __init__(self, parent):
+        self.result = None
+        self.dialog = tk.Toplevel(parent)
+        self.dialog.title("∞eûX SSH IP 0W@W")
+        self.dialog.geometry("300x120")
+        self.dialog.resizable(False, False)
+        
+        # IP 0W@W
+        ttk.Label(self.dialog, text="IP 0W@W:").grid(row=0, column=0, sticky="w", padx=10, pady=5)
+        self.ip_entry = ttk.Entry(self.dialog, width=20)
+        self.ip_entry.grid(row=0, column=1, padx=10, pady=5)
+        self.ip_entry.focus()
+        
+        # –c:yjd|
+        ttk.Label(self.dialog, text="ãOÇY: 192.168.11.143", 
+                 font=("Microsoft JhengHei UI", 9), foreground="#666666").grid(row=1, column=0, columnspan=2, pady=5)
+        
+        # 	cí
+        button_frame = ttk.Frame(self.dialog)
+        button_frame.grid(row=2, column=0, columnspan=2, pady=10)
+        
+        ttk.Button(button_frame, text="∫xö[", command=self.ok_clicked).pack(side="left", padx=5)
+        ttk.Button(button_frame, text="÷Sàm", command=self.cancel_clicked).pack(side="left", padx=5)
+        
+        self.dialog.transient(parent)
+        self.dialog.grab_set()
+        
+        # Å}ö[ Enter uì
+        self.dialog.bind("<Return>", lambda e: self.ok_clicked())
+        
+    def ok_clicked(self):
+        ip = self.ip_entry.get().strip()
+        
+        if ip:
+            # !|ÆUWöIã
+            ip_pattern = r"^(\d{1,3}\.){3}\d{1,3}$"
+            if re.match(ip_pattern, ip):
+                # ¢jÂgƒ{W
+                parts = ip.split(".")
+                valid = True
+                for part in parts:
+                    if int(part) > 255:
+                        valid = False
+                        break
+                
+                if valid:
+                    self.result = ip
+                    self.dialog.destroy()
+                else:
+                    messagebox.showerror("/ì§ä", "IP 0W@Wƒ{W!qHeˇ0-255	ˇ")
+            else:
+                messagebox.showerror("/ì§ä", "IP 0W@W<h_!qHe")
+        else:
+            messagebox.showerror("/ì§ä", "Àä8èeQ IP 0W@W")
+    
+    def cancel_clicked(self):
+        self.dialog.destroy()

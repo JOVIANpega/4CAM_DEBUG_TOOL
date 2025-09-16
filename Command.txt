@@ -1,0 +1,111 @@
+
+
+# 基本系統資訊指令
+sn dev = diag -g sn dev
+sn mb = diag -g sn mb
+sku = diag -g sku
+version = pegacmd version
+
+# EEPROM 相關指令
+eep qr 0 = diag -g eep qr 0
+eep qr 1 = diag -g eep qr 1
+eep qr 2 = diag -g eep qr 2
+eep qr 3 = diag -g eep qr 3
+eep lm 0 = diag -g eep lm 0
+eep lm 1 = diag -g eep lm 1
+eep lm 2 = diag -g eep lm 2
+eep lm 3 = diag -g eep lm 3
+eep sn 0 = diag -g eep sn 0
+eep sn 1 = diag -g eep sn 1
+eep sn 2 = diag -g eep sn 2
+eep sn 3 = diag -g eep sn 3
+eep tar 0 = diag -g eep tar 0
+
+# 系統控制指令
+ircut on = diag -s ircut on
+mount_ro = echo 0 > /sys/block/mmcblk2boot1/force_ro
+mount_rw = mount -o remount,rw -t ext4 /dev/mmcblk2boot1 /mnt/mf
+mount = mount
+
+# 目錄操作指令
+cd_tmp = cd /tmp
+cd_tar = cd /tmp/tar
+cd_vsp = cd /var/vsp
+cd_usr = cd /mnt/usr
+
+# 檔案操作指令
+tar_extract = tar zxvf new_and_ecs.tar.gz
+ls = ls
+
+# 檔案移動指令
+mv_ecs0 = mv stitch_ecs_rgb_data0.bin /var/vsp
+mv_ecs1 = mv stitch_ecs_rgb_data1.bin /var/vsp
+mv_ecs2 = mv stitch_ecs_rgb_data2.bin /var/vsp
+mv_ecs3 = mv stitch_ecs_rgb_data3.bin /var/vsp
+
+# TFTP 上傳指令 (calibration data)
+tftp_cal0 = tftp -pl new_cal_data_0.yml 192.168.11.142 -b 50000
+tftp_cal1 = tftp -pl new_cal_data_1.yml 192.168.11.142 -b 50000
+tftp_cal2 = tftp -pl new_cal_data_2.yml 192.168.11.142 -b 50000
+tftp_cal3 = tftp -pl new_cal_data_3.yml 192.168.11.142 -b 50000
+
+# TFTP 上傳指令 (ECS data)
+tftp_ecs0 = tftp -pl stitch_ecs_rgb_data0.bin 192.168.11.142 -b 50000
+tftp_ecs1 = tftp -pl stitch_ecs_rgb_data1.bin 192.168.11.142 -b 50000
+tftp_ecs2 = tftp -pl stitch_ecs_rgb_data2.bin 192.168.11.142 -b 50000
+tftp_ecs3 = tftp -pl stitch_ecs_rgb_data3.bin 192.168.11.142 -b 50000
+
+# TFTP 下載指令 (1m LUT files)
+tftp_1m_cam0 = tftp -gr 1m_cam0_LUT257_ROT90_hflip0.bin 192.168.11.142
+tftp_1m_cam1 = tftp -gr 1m_cam1_LUT257_ROT-90_hflip0.bin 192.168.11.142
+tftp_1m_cam2 = tftp -gr 1m_cam2_LUT257_ROT90_hflip0.bin 192.168.11.142
+tftp_1m_cam3 = tftp -gr 1m_cam3_LUT257_ROT-90_hflip0.bin 192.168.11.142
+tftp_1m_anchors = tftp -gr 1m_camview_anchors.txt 192.168.11.142
+
+# TFTP 下載指令 (3m LUT files)
+tftp_3m_cam0 = tftp -gr 3m_cam0_LUT257_ROT90_hflip0.bin 192.168.11.142
+tftp_3m_cam1 = tftp -gr 3m_cam1_LUT257_ROT-90_hflip0.bin 192.168.11.142
+tftp_3m_cam2 = tftp -gr 3m_cam2_LUT257_ROT90_hflip0.bin 192.168.11.142
+tftp_3m_cam3 = tftp -gr 3m_cam3_LUT257_ROT-90_hflip0.bin 192.168.11.142
+tftp_3m_anchors = tftp -gr 3m_camview_anchors.txt 192.168.11.142
+
+# TFTP 下載指令 (5m LUT files)
+tftp_5m_cam0 = tftp -gr 5m_cam0_LUT257_ROT90_hflip0.bin 192.168.11.142
+tftp_5m_cam1 = tftp -gr 5m_cam1_LUT257_ROT-90_hflip0.bin 192.168.11.142
+tftp_5m_cam2 = tftp -gr 5m_cam2_LUT257_ROT90_hflip0.bin 192.168.11.142
+tftp_5m_cam3 = tftp -gr 5m_cam3_LUT257_ROT-90_hflip0.bin 192.168.11.142
+tftp_5m_anchors = tftp -gr 5m_camview_anchors.txt 192.168.11.142
+
+# 影片錄製指令
+video_record = hd_video_record_with_vsp_4dev_smart2_pega_dre 30 3 1 0 0
+
+# 檔案刪除指令
+rm_yuv = rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv
+rm_all = rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv
+
+# 快照指令
+hdr_snapshot_0 = diag -s hdr_snapshot 2 0 1
+hdr_snapshot_1 = diag -s hdr_snapshot 2 1 1
+hdr_snapshot_2 = diag -s hdr_snapshot 2 2 1
+hdr_snapshot_3 = diag -s hdr_snapshot 2 3 1
+hdr_snapshot_4 = diag -s hdr_snapshot 2 4 1
+hdr_dre_snapshot = diag -s hdr_dre_snapshot 2 4 1
+
+# TFTP 上傳指令 (快照檔案)
+tftp_yuv_cam0 = tftp -pl dump_cam0_frm_hdr_yuv420_0.yuv 192.168.11.142 -b 50000
+tftp_yuv_cam1 = tftp -pl dump_cam1_frm_hdr_yuv420_0.yuv 192.168.11.142 -b 50000
+tftp_yuv_cam2 = tftp -pl dump_cam2_frm_hdr_yuv420_0.yuv 192.168.11.142 -b 50000
+tftp_yuv_cam3 = tftp -pl dump_cam3_frm_hdr_yuv420_0.yuv 192.168.11.142 -b 50000
+tftp_4cam_hdr = tftp -pl dump_4cam_bs_snap_hdr_0.yuv 192.168.11.142 -b 50000
+tftp_4cam_dre = tftp -pl dump_4cam_bs_snap_hdr_dre_0.yuv 192.168.11.142 -b 50000
+
+# 互動式指令 (影片錄製控制)
+video_input_1 = 1
+video_input_0 = 0
+video_input_2 = 2
+video_input_3 = 3
+video_list = l
+video_quit = q
+
+# 寫入指令
+write_2dlut = diag -s write_2dlut_to_emmc
