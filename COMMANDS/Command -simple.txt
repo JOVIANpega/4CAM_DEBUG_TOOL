@@ -1,36 +1,32 @@
 
 #ssh root@192.168.11.143
 # 基本系統資訊指令
-sn dev = diag -g sn dev
-sn mb = diag -g sn mb
-sku = diag -g sku
-version = pegacmd version
+READ sn dev = diag -g sn dev
+READ sn mb = diag -g sn mb
+READ sku = diag -g sku
+READ version = pegacmd version
 
 # 快照指令 yuv
-hdr_snapshot_0 = diag -s hdr_snapshot 2 0
-hdr_snapshot_1 = diag -s hdr_snapshot 2 1
-hdr_snapshot_2 = diag -s hdr_snapshot 2 2
-hdr_snapshot_3 = diag -s hdr_snapshot 2 3
-hdr_snapshot_4 = diag -s hdr_snapshot 2 4
-hdr_dre_snapshot全景照 = diag -s hdr_dre_snapshot 2 4
+HD_snapshot_0 = diag -s hdr_snapshot 2 0
+HD_snapshot_1 = diag -s hdr_snapshot 2 1
+HD_snapshot_2 = diag -s hdr_snapshot 2 2
+HD_snapshot_3 = diag -s hdr_snapshot 2 3
+
+# 快照指令 DRE
+DRE_snapshot_0 = diag -s dre_snapshot 1 0
+DRE_snapshot_1 = diag -s dre_snapshot 1 1
+DRE_snapshot_2 = diag -s dre_snapshot 1 2
+DRE_snapshot_3 = diag -s dre_snapshot 1 3
+
+#單CAM拍照
+snapshot_Cam0 = diag -s snapshot 1 0
+snapshot_Cam1 = diag -s snapshot 1 1
+snapshot_Cam2 = diag -s snapshot 1 2
+snapshot_Cam3 = diag -s snapshot 1 3
+
 
 #JPG only 4 cam
 hdr_snapshot_4全景照 = diag -s hdr_snapshot 1 4
-
-# EEPROM 相關指令
-eep qr 0 = diag -g eep qr 0
-eep qr 1 = diag -g eep qr 1
-eep qr 2 = diag -g eep qr 2
-eep qr 3 = diag -g eep qr 3
-eep lm 0 = diag -g eep lm 0
-eep lm 1 = diag -g eep lm 1
-eep lm 2 = diag -g eep lm 2
-eep lm 3 = diag -g eep lm 3
-eep sn 0 = diag -g eep sn 0
-eep sn 1 = diag -g eep sn 1
-eep sn 2 = diag -g eep sn 2
-eep sn 3 = diag -g eep sn 3
-eep tar 0 = diag -g eep tar 0
 
 # 影片錄製指令
 video_record影片錄製 = hd_video_record_with_vsp_4dev_smart2_pega_dre 30 3 1 0 0
