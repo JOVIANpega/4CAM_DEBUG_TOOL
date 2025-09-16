@@ -105,10 +105,10 @@ if not exist "COMMANDS\linux.txt" (
 REM 檢查是否有圖示檔案
 if exist "assets\icon.ico" (
     echo 使用自訂圖示打包...
-    pyinstaller --onefile --noconsole --icon=assets/icon.ico --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --name=%EXE_NAME% main.py
+    pyinstaller --onefile --noconsole --icon=assets/icon.ico --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
 ) else (
     echo 未找到圖示檔案，使用預設圖示打包...
-    pyinstaller --onefile --noconsole --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --name=%EXE_NAME% main.py
+    pyinstaller --onefile --noconsole --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
 )
 
 if errorlevel 1 (
@@ -144,6 +144,12 @@ if exist "dist\%EXE_NAME%.exe" (
     if exist "assets" (
         xcopy "assets" "dist\assets" /E /I /Q
         echo - assets 目錄已複製
+    )
+
+    REM 複製設定檔 settings.json 至 dist（若存在）
+    if exist "settings.json" (
+        copy /Y "settings.json" "dist\settings.json" >nul
+        echo - settings.json 已複製
     )
     
     REM 顯示檔案資訊

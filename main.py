@@ -34,17 +34,22 @@ from command_loader import load_commands_from_file, CommandItem
 
 
 class Tooltip:
-    """創建 tooltip 的工具類別"""
-    def __init__(self, widget, text='widget info'):
+    """創建 tooltip 的工具類別（支援自訂放大字體與最短字元長度）。"""
+    def __init__(self, widget, text='widget info', *, font_size: int = 16, min_length: int = 1):
         self.widget = widget
         self.text = text
+        self.font_size = font_size
+        self.min_length = min_length
         self.tooltip_window = None
+        self.tooltip_label = None
         self.widget.bind('<Enter>', self.on_enter)
         self.widget.bind('<Leave>', self.on_leave)
+        self.widget.bind('<Motion>', self.on_motion)
         
     def on_enter(self, event=None):
-        """當滑鼠進入時顯示 tooltip"""
-        if len(self.widget.get()) > 30:  # 只有當文字超過30個字元時才顯示
+        """當滑鼠進入時顯示 tooltip（自動取用當前 widget 顯示文字）。"""
+        self._refresh_text_from_widget()
+        if len(self.text) >= self.min_length:
             self.show_tooltip()
             
     def on_leave(self, event=None):
@@ -52,29 +57,66 @@ class Tooltip:
         self.hide_tooltip()
         
     def show_tooltip(self):
-        """顯示 tooltip"""
+        """顯示 tooltip（靠近元件右下）。"""
         if self.tooltip_window or not self.text:
             return
-            
-        x, y, _, _ = self.widget.bbox("insert")
-        x += self.widget.winfo_rootx() + 25
-        y += self.widget.winfo_rooty() + 25
+        # 初始位置（使用元件右下）
+        try:
+            x, y, _, _ = self.widget.bbox("insert")
+        except Exception:
+            x, y = 0, self.widget.winfo_height()
+        x += self.widget.winfo_rootx() + 12
+        y += self.widget.winfo_rooty() + 12
         
         self.tooltip_window = tw = tk.Toplevel(self.widget)
         tw.wm_overrideredirect(True)
         tw.wm_geometry("+%d+%d" % (x, y))
+        try:
+            tw.attributes('-topmost', True)
+        except Exception:
+            pass
         
-        label = tk.Label(tw, text=self.text, justify=tk.LEFT,
-                        background="#ffffe0", relief=tk.SOLID, borderwidth=1,
-                        font=("Consolas", 10), wraplength=400)
-        label.pack(ipadx=1)
+        self.tooltip_label = label = tk.Label(
+            tw,
+            text=self.text,
+            justify=tk.LEFT,
+            background="#ffffe0",
+            relief=tk.SOLID,
+            borderwidth=1,
+            font=("Microsoft JhengHei", self.font_size, 'bold'),
+            wraplength=500,
+        )
+        label.pack(ipadx=6, ipady=4)
         
     def hide_tooltip(self):
         """隱藏 tooltip"""
         tw = self.tooltip_window
         self.tooltip_window = None
+        self.tooltip_label = None
         if tw:
             tw.destroy()
+
+    def on_motion(self, event=None):
+        """滑鼠移動時更新內容與位置。"""
+        if not self.tooltip_window:
+            return
+        self._refresh_text_from_widget()
+        if self.tooltip_label is not None:
+            self.tooltip_label.configure(text=self.text)
+        try:
+            x = event.x_root + 12
+            y = event.y_root + 12
+            self.tooltip_window.wm_geometry(f"+{x}+{y}")
+        except Exception:
+            pass
+
+    def _refresh_text_from_widget(self) -> None:
+        try:
+            value = self.widget.get()
+            if value:
+                self.text = value
+        except Exception:
+            pass
 
 
 # ------------------------------
@@ -131,6 +173,16 @@ class FourCamDebugTool:
         self.ssh = SSHClientManager()
         self.settings_file = Path('settings.json')
         self.connection_status = 'disconnected'  # disconnected, connecting, connected
+
+        # TTK 主題與按鈕 hover 樣式
+        try:
+            style = ttk.Style(self.root)
+            style.theme_use('clam')
+            style.configure('Hover.TButton', background='#1976d2', foreground='white')
+            # 單一輸入框高亮樣式（淡黃色）
+            style.configure('Highlight.TEntry', fieldbackground='#fff9c4')
+        except Exception:
+            pass
 
         # 預設設定
         self.var_dut_ip = tk.StringVar(value='192.168.11.143')
@@ -199,24 +251,38 @@ class FourCamDebugTool:
         title_label.configure(background='lightgreen')
         
         # 清空按鍵（大尺寸）
-        ttk.Button(top, text='清空輸出', command=self.on_clear_output, width=12).pack(side=tk.RIGHT, padx=(10, 0))
+        btn_clear = ttk.Button(top, text='清空輸出', command=self.on_clear_output, width=12)
+        btn_clear.pack(side=tk.RIGHT, padx=(10, 0))
+        Tooltip(btn_clear, text='清空右側輸出內容', font_size=16)
         
         # 字體調整按鍵
-        ttk.Button(top, text='+', width=3, command=self.on_font_plus).pack(side=tk.RIGHT, padx=(4, 0))
-        ttk.Button(top, text='-', width=3, command=self.on_font_minus).pack(side=tk.RIGHT)
+        btn_plus = ttk.Button(top, text='+', width=3, command=self.on_font_plus)
+        btn_plus.pack(side=tk.RIGHT, padx=(4, 0))
+        Tooltip(btn_plus, text='放大字體', font_size=16)
+        btn_minus = ttk.Button(top, text='-', width=3, command=self.on_font_minus)
+        btn_minus.pack(side=tk.RIGHT)
+        Tooltip(btn_minus, text='縮小字體', font_size=16)
 
         # 連線設定
         lf_conn = ttk.LabelFrame(parent, text='連線設定', padding=8)
         lf_conn.pack(fill=tk.X, pady=(10, 6))
         self._add_labeled_entry(lf_conn, 'DUT IP', self.var_dut_ip, 0)
-        self._add_labeled_entry(lf_conn, 'PC IP', self.var_pc_ip, 1)
+        ent_pc_ip = self._add_labeled_entry(lf_conn, 'PC IP', self.var_pc_ip, 1)
+        try:
+            ent_pc_ip.configure(style='Highlight.TEntry')
+        except Exception:
+            pass
         self._add_labeled_entry(lf_conn, 'Username', self.var_username, 2)
         # 移除密碼欄位，因為 DUT 不需要密碼
         self._add_labeled_entry(lf_conn, 'Timeout(sec)', self.var_timeout, 3)
         btns = ttk.Frame(lf_conn)
         btns.grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
-        ttk.Button(btns, text='測試連線', command=self.on_test_connection).pack(side=tk.LEFT)
-        ttk.Button(btns, text='重新載入指令', command=self.on_reload_commands).pack(side=tk.LEFT, padx=6)
+        btn_test = ttk.Button(btns, text='測試連線', command=self.on_test_connection)
+        btn_test.pack(side=tk.LEFT)
+        Tooltip(btn_test, text='測試 SSH 連線狀態', font_size=16)
+        btn_reload = ttk.Button(btns, text='重新載入指令', command=self.on_reload_commands)
+        btn_reload.pack(side=tk.LEFT, padx=6)
+        Tooltip(btn_reload, text='重新讀取 Command.txt 指令', font_size=16)
 
         # 指令控制
         lf_cmd = ttk.LabelFrame(parent, text='指令控制（Command.txt）', padding=8)
@@ -224,18 +290,26 @@ class FourCamDebugTool:
         ttk.Label(lf_cmd, text='指令檔', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
         ent_cmdfile = ttk.Entry(lf_cmd, textvariable=self.var_command_file, width=42, font=self.left_font)
         ent_cmdfile.grid(row=0, column=1, sticky=tk.W, padx=(6, 0))
-        ttk.Button(lf_cmd, text='選擇', command=self.on_pick_command_file).grid(row=0, column=2, padx=(6, 0))
+        btn_pick_cmd = ttk.Button(lf_cmd, text='選擇', command=self.on_pick_command_file)
+        btn_pick_cmd.grid(row=0, column=2, padx=(6, 0))
+        Tooltip(btn_pick_cmd, text='選擇 Command.txt 檔案', font_size=16)
 
         ttk.Label(lf_cmd, text='指令選擇', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(6, 0))
         self.cbo_commands = ttk.Combobox(lf_cmd, textvariable=self.var_command_choice, width=50, state='readonly', font=self.left_font)
         self.cbo_commands.grid(row=1, column=1, columnspan=2, sticky=tk.W, padx=(6, 0), pady=(6, 0))
         self.cbo_commands.bind('<<ComboboxSelected>>', self.on_command_selected)
+        # 放大 tooltip（靠近就顯示）
+        Tooltip(self.cbo_commands, font_size=16, min_length=1)
         
         # 執行指令按鍵和開啟指令表按鍵
         btn_frame = ttk.Frame(lf_cmd)
         btn_frame.grid(row=2, column=0, columnspan=3, sticky=tk.E, pady=(6, 0))
-        ttk.Button(btn_frame, text='開啟指令表', command=self.on_open_command_file).pack(side=tk.RIGHT, padx=(6, 0))
-        ttk.Button(btn_frame, text='執行指令', command=self.on_execute_selected_command).pack(side=tk.RIGHT)
+        btn_open_cmd = ttk.Button(btn_frame, text='開啟指令表', command=self.on_open_command_file)
+        btn_open_cmd.pack(side=tk.RIGHT, padx=(6, 0))
+        Tooltip(btn_open_cmd, text='以系統預設編輯器開啟 Command.txt', font_size=16)
+        btn_exec_cmd = ttk.Button(btn_frame, text='執行指令', command=self.on_execute_selected_command)
+        btn_exec_cmd.pack(side=tk.RIGHT)
+        Tooltip(btn_exec_cmd, text='執行上方選取的指令', font_size=16)
         
         # 清空輸出選項
         ttk.Checkbutton(lf_cmd, text='執行新指令時清空輸出', variable=self.var_clear_output).grid(row=3, column=0, columnspan=3, sticky=tk.W, pady=(6, 0))
@@ -248,12 +322,15 @@ class FourCamDebugTool:
         self.var_manual = tk.StringVar()
         self.cbo_manual = ttk.Combobox(lf_manual, textvariable=self.var_manual, values=[], width=47, state='readonly', font=self.left_font)
         self.cbo_manual.grid(row=0, column=0, padx=(0, 6))
-        ttk.Button(lf_manual, text='執行', command=self.on_execute_manual).grid(row=0, column=1)
+        Tooltip(self.cbo_manual, font_size=16, min_length=1)
+        btn_exec_linux = ttk.Button(lf_manual, text='執行', command=self.on_execute_manual)
+        btn_exec_linux.grid(row=0, column=1)
+        Tooltip(btn_exec_linux, text='執行常用 Linux 指令', font_size=16)
         # 啟動即載入
         self._load_linux_commands()
 
-        # 自訂 Linux 指令輸入列
-        ttk.Label(lf_manual, text='自訂指令', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(8, 0))
+        # 手動輸入 Linux 指令輸入列
+        ttk.Label(lf_manual, text='手動輸入指令', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(8, 0))
         manual_frame = ttk.Frame(lf_manual)
         manual_frame.grid(row=2, column=0, columnspan=2, sticky=tk.W)
         self.var_manual_input = tk.StringVar()
@@ -261,7 +338,10 @@ class FourCamDebugTool:
         self.ent_manual_input.pack(side=tk.LEFT)
         self.ent_manual_input.insert(0, '輸入 Linux 指令，例如：ls -la /mnt/usr/')
         self.ent_manual_input.bind('<FocusIn>', lambda e: self.ent_manual_input.delete(0, tk.END) if self.var_manual_input.get().startswith('輸入 ') else None)
-        self.ent_manual_input.bind('<Return>', lambda e: self.on_execute_unified())
+        self.ent_manual_input.bind('<Return>', lambda e: self.on_execute_manual_input())
+        btn_exec_manual = ttk.Button(manual_frame, text='執行自訂', command=self.on_execute_manual_input)
+        btn_exec_manual.pack(side=tk.LEFT, padx=(6, 0))
+        Tooltip(btn_exec_manual, text='執行手動輸入的 Linux 指令', font_size=16)
 
         # 檔案傳輸
         lf_copy = ttk.LabelFrame(parent, text='檔案傳輸（DUT → PC）', padding=8)
@@ -286,6 +366,7 @@ class FourCamDebugTool:
         self.cbo_common = ttk.Combobox(lf_copy, textvariable=self.var_common_path, values=self.common_paths, 
                                  width=45, state='readonly', font=self.left_font)
         self.cbo_common.grid(row=0, column=1, sticky=tk.W, padx=(6, 0))
+        Tooltip(self.cbo_common, font_size=16, min_length=1)
         self.cbo_common.bind('<<ComboboxSelected>>', self.on_common_path_selected)
         
         self.ent_src = self._add_labeled_entry(lf_copy, '來源（DUT glob）', self.var_src_glob, 1, width=42)
@@ -296,22 +377,24 @@ class FourCamDebugTool:
         entry_frame.grid(row=2, column=1, sticky=tk.W, padx=(6, 0))
         self.ent_dst = ttk.Entry(entry_frame, textvariable=self.var_dst_dir, width=42, font=self.left_font)
         self.ent_dst.pack(side=tk.LEFT)
-        ttk.Button(entry_frame, text='📁', command=self.on_open_destination_folder, width=3).pack(side=tk.LEFT, padx=(6, 0))
+        btn_open_dst = ttk.Button(entry_frame, text='📁', command=self.on_open_destination_folder, width=3)
+        btn_open_dst.pack(side=tk.LEFT, padx=(6, 0))
+        Tooltip(btn_open_dst, text='開啟目標資料夾', font_size=16)
         
         btns2 = ttk.Frame(lf_copy)
         btns2.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
-        ttk.Button(btns2, text='使用說明', command=self.on_show_help).pack(side=tk.LEFT)
-        ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut).pack(side=tk.LEFT, padx=6)
+        btn_help = ttk.Button(btns2, text='使用說明', command=self.on_show_help)
+        btn_help.pack(side=tk.LEFT)
+        Tooltip(btn_help, text='開啟使用說明文件', font_size=16)
+        btn_copy = ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut)
+        btn_copy.pack(side=tk.LEFT, padx=6)
+        Tooltip(btn_copy, text='從 DUT 複製檔案到 PC', font_size=16)
 
-        # 左側底部統一執行按鈕
-        footer = ttk.Frame(parent)
-        footer.pack(fill=tk.X, pady=(10, 6))
-        self.btn_execute_unified = ttk.Button(footer, text='執行', command=self.on_execute_unified, width=20)
-        self.btn_execute_unified.pack(pady=6)
+        # （移除）底部統一執行按鈕
 
         for child in lf_conn.winfo_children() + lf_cmd.winfo_children() + lf_manual.winfo_children() + lf_copy.winfo_children():
             try:
-                child.configure(font=('Microsoft JhengHei', self.font_size))
+                child.configure(font=self.left_font)
             except Exception:
                 pass
 
@@ -341,30 +424,30 @@ class FourCamDebugTool:
         # 追蹤上一個搜尋位置
         self._last_search_index = '1.0'
         
-        self.txt_output = ScrolledText(parent, width=50, height=30, font=('Consolas', self.font_size))
+        self.txt_output = ScrolledText(parent, width=50, height=30, font=('Microsoft JhengHei', self.font_size))
         self.txt_output.pack(fill=tk.BOTH, expand=True, pady=(6, 0))
         
         # 設定文字標籤顏色
-        self.txt_output.tag_configure("success", foreground="green", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("error", foreground="red", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("warning", foreground="orange", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("info", foreground="blue", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("file", foreground="purple", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("path", foreground="darkgreen", font=('Consolas', self.font_size, 'bold'))
+        self.txt_output.tag_configure("success", foreground="green", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("error", foreground="red", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("warning", foreground="orange", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("info", foreground="blue", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("file", foreground="purple", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("path", foreground="darkgreen", font=('Microsoft JhengHei', self.font_size, 'bold'))
         
         # 檔案高亮標籤 - 移除背景色，JPG和YUV使用綠色
-        self.txt_output.tag_configure("file_yuv", foreground="green", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("file_jpg", foreground="green", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("file_bin", foreground="darkgreen", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("file_log", foreground="darkorange", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("file_yml", foreground="darkmagenta", font=('Consolas', self.font_size, 'bold'))
-        self.txt_output.tag_configure("file_other", foreground="black", font=('Consolas', self.font_size, 'bold'))
+        self.txt_output.tag_configure("file_yuv", foreground="green", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("file_jpg", foreground="green", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("file_bin", foreground="darkgreen", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("file_log", foreground="darkorange", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("file_yml", foreground="darkmagenta", font=('Microsoft JhengHei', self.font_size, 'bold'))
+        self.txt_output.tag_configure("file_other", foreground="black", font=('Microsoft JhengHei', self.font_size, 'bold'))
         
         # 特殊指令標籤
-        self.txt_output.tag_configure("diag_sn", foreground="purple", font=('Consolas', self.font_size, 'bold'))
+        self.txt_output.tag_configure("diag_sn", foreground="purple", font=('Microsoft JhengHei', self.font_size, 'bold'))
 
-        # 搜尋標記（不用背景色，避免影響整體配色規則）
-        self.txt_output.tag_configure("search_hit", foreground="magenta", underline=1, font=('Consolas', self.font_size, 'bold'))
+        # 搜尋標記（淡黃色反白）
+        self.txt_output.tag_configure("search_hit", background="#fff9c4", foreground="black", font=('Microsoft JhengHei', self.font_size))
 
     def _update_connection_status(self, status: str) -> None:
         """更新連線狀態指示器"""
@@ -1504,7 +1587,7 @@ class FourCamDebugTool:
         """更新所有文字區域的字體大小"""
         try:
             # 更新基本文字區域字體
-            self.txt_output.configure(font=('Consolas', self.font_size))
+            self.txt_output.configure(font=('Microsoft JhengHei', self.font_size))
             
             # 更新所有標籤的字體大小
             tags = [
@@ -1519,7 +1602,7 @@ class FourCamDebugTool:
                     current_config = self.txt_output.tag_cget(tag, 'foreground')
                     if current_config:
                         # 重新設定標籤，保持顏色但更新字體大小
-                        self.txt_output.tag_configure(tag, foreground=current_config, font=('Consolas', self.font_size, 'bold'))
+                        self.txt_output.tag_configure(tag, foreground=current_config, font=('Microsoft JhengHei', self.font_size, 'bold'))
                 except Exception:
                     # 如果標籤不存在或設定失敗，跳過
                     pass
