@@ -27,6 +27,7 @@ from tkinter.scrolledtext import ScrolledText
 import logging
 import json
 from pathlib import Path
+import socket
 
 # 本地模組
 from ssh_client import SSHClientManager
@@ -215,6 +216,8 @@ class FourCamDebugTool:
         
         # 自動嘗試連線
         self.root.after(1000, self._auto_connect)
+        # 啟動後嘗試自動偵測 PC IP（若未填）
+        self.root.after(300, self._auto_fill_pc_ip)
 
     def _auto_connect(self) -> None:
         """自動嘗試連線"""
@@ -245,7 +248,7 @@ class FourCamDebugTool:
         top.pack(fill=tk.X)
         
         # 4CAM_DEBUG_TOOL 標題（淡綠色反白背景）
-        title_label = ttk.Label(top, text='4CAM_DEBUG_TOOL', font=('Microsoft JhengHei', 14, 'bold'))
+        title_label = ttk.Label(top, text='4CAM_DEBUG_TOOL', font=('Microsoft JhengHei', 18, 'bold'))
         title_label.pack(side=tk.LEFT)
         # 設定淡綠色背景
         title_label.configure(background='lightgreen')
@@ -266,10 +269,13 @@ class FourCamDebugTool:
         # 連線設定
         lf_conn = ttk.LabelFrame(parent, text='連線設定', padding=8)
         lf_conn.pack(fill=tk.X, pady=(10, 6))
-        self._add_labeled_entry(lf_conn, 'DUT IP', self.var_dut_ip, 0)
-        ent_pc_ip = self._add_labeled_entry(lf_conn, 'PC IP', self.var_pc_ip, 1)
+        ent_dut = self._add_labeled_entry(lf_conn, 'DUT IP', self.var_dut_ip, 0)
+        self.ent_pc_ip = self._add_labeled_entry(lf_conn, 'PC IP', self.var_pc_ip, 1)
+        # 啟動與 DUT 變更時自動偵測本機來源 IP；若使用者手動輸入則移除灰底樣式
         try:
-            ent_pc_ip.configure(style='Highlight.TEntry')
+            self.ent_pc_ip.configure(style='Hint.TEntry')
+            ent_dut.bind('<FocusOut>', lambda _e: self._auto_fill_pc_ip())
+            self.ent_pc_ip.bind('<KeyRelease>', lambda _e: self._clear_pc_ip_hint_style())
         except Exception:
             pass
         self._add_labeled_entry(lf_conn, 'Username', self.var_username, 2)
@@ -644,6 +650,7 @@ class FourCamDebugTool:
             pass  # 不需要做任何事，因為指令選擇已經在下拉選單中顯示
 
     def on_test_connection(self) -> None:
+        self._auto_fill_pc_ip()
         self._run_bg(self._task_test_connection)
 
     def on_execute_selected_command(self) -> None:
@@ -721,24 +728,17 @@ class FourCamDebugTool:
         self._run_bg(lambda: self._task_exec_command(cmd))
 
     def on_show_help(self) -> None:
-        """產生並開啟 HTML 使用說明文件"""
+        """開啟 HTML 使用說明文件（僅開啟，不再自動覆寫）。"""
         try:
-            html_content = self._generate_help_html()
-            
-            # 儲存 HTML 檔案
             help_file = Path('4CAM_DEBUG_TOOL_使用說明.html')
-            with open(help_file, 'w', encoding='utf-8') as f:
-                f.write(html_content)
-            
-            # 使用預設瀏覽器開啟
-            import webbrowser
-            import os
+            if not help_file.exists():
+                messagebox.showwarning('提醒', '找不到說明檔，請通知維護者或重新產生。')
+                return
+            import webbrowser, os
             webbrowser.open(f'file://{os.path.abspath(help_file)}')
-            
-            self._append_output(f'已產生使用說明：{help_file.absolute()}')
-            
+            self._append_output(f'已開啟使用說明：{help_file.absolute()}')
         except Exception as exc:
-            messagebox.showerror('錯誤', f'產生說明文件失敗：{exc}')
+            messagebox.showerror('錯誤', f'開啟說明失敗：{exc}')
 
     # ---------- LINUX 指令載入 ----------
     def _get_linux_commands_path(self) -> Path:
@@ -1317,6 +1317,38 @@ class FourCamDebugTool:
         self._save_settings()
         self.ssh.close()
         self.root.destroy()
+
+    # ---------- 自動偵測 PC IP ----------
+    def _auto_fill_pc_ip(self) -> None:
+        """若 PC IP 未填，嘗試對 DUT IP 建立暫時 socket 取得來源 IP，並以灰底樣式顯示可覆寫。"""
+        try:
+            dut_ip = (self.var_dut_ip.get() or '').strip()
+            if not dut_ip:
+                return
+            current_pc = (self.var_pc_ip.get() or '').strip()
+            if current_pc:
+                return
+            s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
+            s.settimeout(0.2)
+            try:
+                s.connect((dut_ip, 22))
+                local_ip = s.getsockname()[0]
+                if local_ip:
+                    self.var_pc_ip.set(local_ip)
+                    try:
+                        self.ent_pc_ip.configure(style='Hint.TEntry')
+                    except Exception:
+                        pass
+            finally:
+                s.close()
+        except Exception:
+            pass
+
+    def _clear_pc_ip_hint_style(self) -> None:
+        try:
+            self.ent_pc_ip.configure(style='TEntry')
+        except Exception:
+            pass
 
     # ---------- 背景任務 ----------
     def _task_test_connection(self) -> None:

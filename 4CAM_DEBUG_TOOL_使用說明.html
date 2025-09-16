@@ -97,6 +97,143 @@
         <h1>4CAM_DEBUG_TOOL 使用說明</h1>
         
         <div class="section">
+            <h2>📘 linux.txt 說明與常見指令解釋</h2>
+            <p>常用 LINUX 指令由 <code>COMMANDS/linux.txt</code> 載入，一行一筆，格式：</p>
+            <div class="code">名稱 = 實際指令</div>
+            <p>例如：</p>
+            <div class="code">列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/</div>
+
+            <h3>常見項目與用途</h3>
+            <table>
+                <tr><th>名稱（下拉顯示）</th><th>實際指令</th><th>用途/說明</th><th>注意事項</th></tr>
+                <tr>
+                    <td>列出 /mnt/usr/ 所有檔案</td>
+                    <td><code>ls -la /mnt/usr/</code></td>
+                    <td>檢視 DUT 使用者資料夾內檔案清單，含權限/大小/時間。</td>
+                    <td>大量輸出可配合右上搜尋功能定位檔名。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /mnt/usr/ JPG 檔</td>
+                    <td><code>rm -f /mnt/usr/*.jpg</code></td>
+                    <td>清理 JPG 圖片。</td>
+                    <td><strong>不可復原</strong>，請先用 ls 確認目錄與檔案。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /mnt/usr/ YUV 檔</td>
+                    <td><code>rm -f /mnt/usr/*.yuv</code></td>
+                    <td>清理 YUV 影像。</td>
+                    <td><strong>不可復原</strong>，請先用 ls 確認目錄與檔案。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /var/vsp/ JPG 檔</td>
+                    <td><code>rm -f /var/vsp/*.jpg</code></td>
+                    <td>清理 VSP 目錄下 JPG。</td>
+                    <td>確認權限與路徑是否正確。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /var/vsp/ YUV 檔</td>
+                    <td><code>rm -f /var/vsp/*.yuv</code></td>
+                    <td>清理 VSP 目錄下 YUV。</td>
+                    <td>確認權限與路徑是否正確。</td>
+                </tr>
+            </table>
+
+            <h3>範例輸出（實際執行紀錄）</h3>
+            <h4>常用 LINUX 指令</h4>
+            <div class="code">
+送出指令: ls -la /mnt/usr/
+$ ls -la /mnt/usr/
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+total 103984
+drwxr-xr-x    4 0        root          4096 Sep 11 08:06 .
+drwxrwxr-x   19 0        root             0 Jan  1  1970 ..
+-rw-r--r--    1 0        root      44236800 Sep 11 07:27 dump_4cam_bs_snap_hdr_dre_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 06:09 dump_cam0_frm_hdr_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 07:38 dump_cam0_frm_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 07:00 dump_cam1_frm_hdr_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 07:38 dump_cam1_frm_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 06:52 dump_cam3_frm_hdr_yuv420_0.yuv
+drwx------    2 0        root         16384 Jan  1  1970 lost+found
+drwxr-xr-x    8 0        root          4096 Jun 27 10:05 odm
+Exit code: 0
+===指令完畢===
+
+送出指令: rm -f /mnt/usr/*.jpg
+$ rm -f /mnt/usr/*.jpg
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+Exit code: 0
+===指令完畢===
+
+送出指令: rm -f /mnt/usr/*.yuv
+$ rm -f /mnt/usr/*.yuv
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+Exit code: 0
+===指令完畢===
+            </div>
+
+            <h4>檔案傳輸</h4>
+            <div class="code">
+已選擇：/mnt/usr/*.jpg - JPG 圖片檔案
+來源路徑：/mnt/usr/*.jpg
+建議目標：D:\VALO360\4CAM\JPG
+🔍 檢查檔案中...
+⚠️ 沒有找到匹配的檔案
+💡 點擊「開始傳輸」按鍵開始複製檔案
+===指令完畢===
+已選擇：/mnt/usr/*.yuv - YUV 影像檔案
+來源路徑：/mnt/usr/*.yuv
+建議目標：D:\VALO360\4CAM\YUV
+🔍 檢查檔案中...
+⚠️ 沒有找到匹配的檔案
+💡 點擊「開始傳輸」按鍵開始複製檔案
+===指令完畢===
+已選擇：/mnt/usr/*.bin - BIN 二進位檔案
+來源路徑：/mnt/usr/*.bin
+建議目標：D:\VALO360\4CAM\BIN
+🔍 檢查檔案中...
+⚠️ 沒有找到匹配的檔案
+💡 點擊「開始傳輸」按鍵開始複製檔案
+===指令完畢===
+            </div>
+
+            <h4>指令控制（Command.txt）</h4>
+            <div class="code">
+送出指令: diag -g sn dev
+$ diag -g sn dev
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+diag: dev sn WE251400006
+Exit code: 0
+===指令完畢===
+送出指令: diag -g sku
+$ diag -g sku
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+diag: sku N3C2401C
+Exit code: 0
+===指令完畢===
+            </div>
+
+            <h3>管理建議</h3>
+            <ul>
+                <li>可直接以文字編輯器維護 <code>COMMANDS/linux.txt</code>，新增或刪除專案需要的指令。</li>
+                <li>下拉顯示會自動加上 1/2/3… 編號，僅為顯示用，不影響實際送出的指令。</li>
+                <li>若指令過長，滑鼠停留在下拉上會顯示放大的提示視窗（Tooltip）。</li>
+            </ul>
+        </div>
+
+        <div class="footer">
+            <p><strong>4CAM_DEBUG_TOOL</strong> - 版本 1.0.0</p>
+            <p>專為 4 攝影機 DUT 設計的 SSH 控制工具</p>
+            <p>生成時間：2025-09-16</p>
+        </div>
+    </div>
+</body>
+</html>
+        <div class="section">
             <h2>📋 工具概述</h2>
             <p><strong>4CAM_DEBUG_TOOL</strong> 是一個專為 4 攝影機 DUT（Device Under Test）設計的 SSH 控制工具，提供直觀的圖形介面來執行遠端指令和檔案傳輸。</p>
         </div>
@@ -232,22 +369,4 @@
             </ul>
         </div>
 
-        <div class="section">
-            <h2>📞 技術支援</h2>
-            <p>如遇到問題，請檢查：</p>
-            <ul>
-                <li>程式輸出的錯誤訊息</li>
-                <li>DUT 設備的狀態指示燈</li>
-                <li>網路連線狀態</li>
-                <li>防火牆設定</li>
-            </ul>
-        </div>
-
-        <div class="footer">
-            <p><strong>4CAM_DEBUG_TOOL</strong> - 版本 1.0.0</p>
-            <p>專為 4 攝影機 DUT 設計的 SSH 控制工具</p>
-            <p>生成時間：2025-09-16 16:56:43</p>
-        </div>
-    </div>
-</body>
-</html>
+      
