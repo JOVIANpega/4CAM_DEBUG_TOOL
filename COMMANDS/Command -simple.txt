@@ -15,7 +15,7 @@ hdr_snapshot_4 = diag -s hdr_snapshot 2 4
 hdr_dre_snapshot全景照 = diag -s hdr_dre_snapshot 2 4
 
 #JPG only 4 cam
-hdr_snapshot_4 = diag -s hdr_snapshot 1 4
+hdr_snapshot_4全景照 = diag -s hdr_snapshot 1 4
 
 # EEPROM 相關指令
 eep qr 0 = diag -g eep qr 0

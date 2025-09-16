@@ -107,6 +107,13 @@ def get_resource_path(relative_path: str) -> str:
     return os.path.join(base_path, relative_path)
 
 
+def _safe_makedirs(path: Path) -> None:
+    try:
+        path.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        pass
+
+
 # ------------------------------
 # GUI 主視窗
 # ------------------------------
@@ -236,67 +243,25 @@ class FourCamDebugTool:
         # 常用 Linux 指令
         lf_manual = ttk.LabelFrame(parent, text='常用 Linux 指令', padding=8)
         lf_manual.pack(fill=tk.X)
-        
-        # 常用 Linux 指令列表（含說明）
-        self.linux_commands = [
-            'ls -la - 列出詳細檔案資訊',
-            'ls -la / - 列出根目錄詳細資訊', 
-            'ls -la /tmp - 列出臨時目錄檔案',
-            'ls -la /mnt/usr - 列出使用者目錄檔案',
-            'ls -la /mnt/usr/ - 列出 /mnt/usr/ 所有檔案',
-            'pwd - 顯示當前工作目錄',
-            'whoami - 顯示當前使用者',
-            'uname -a - 顯示系統資訊',
-            'df -h - 顯示磁碟使用量',
-            'free -h - 顯示記憶體使用量',
-            'ps aux - 顯示所有執行程序',
-            'top - 即時系統監控',
-            'netstat -an - 顯示網路連線',
-            'ifconfig - 顯示網路介面',
-            'route -n - 顯示路由表',
-            'cat /proc/version - 顯示核心版本',
-            'cat /proc/cpuinfo - 顯示 CPU 資訊',
-            'cat /proc/meminfo - 顯示記憶體資訊',
-            'uptime - 顯示系統運行時間',
-            'date - 顯示系統時間',
-            'hwclock - 顯示硬體時鐘',
-            'mount - 顯示掛載點',
-            'umount - 卸載檔案系統',
-            'find / -name "*.log" 2>/dev/null - 搜尋日誌檔案',
-            'grep -r "error" /var/log 2>/dev/null - 搜尋錯誤訊息',
-            'tail -f /var/log/messages - 即時監控系統訊息',
-            'dmesg | tail -20 - 顯示最近核心訊息',
-            'lsmod - 顯示已載入模組',
-            'lsusb - 顯示 USB 設備',
-            'lspci - 顯示 PCI 設備',
-            'i2cdetect -y 0 - 偵測 I2C 匯流排 0',
-            'i2cdetect -y 1 - 偵測 I2C 匯流排 1',
-            # 4CAM 專用指令
-            'ls -la /tmp/tar - 列出 tar 目錄',
-            'ls -la /var/vsp - 列出 VSP 目錄',
-            'ls -la /mnt/usr - 列出使用者目錄',
-            'rm -f /mnt/usr/*.jpg - 刪除 /mnt/usr/ JPG 檔',
-            'rm -f /mnt/usr/*.yuv - 刪除 /mnt/usr/ YUV 檔',
-            'rm -f /var/vsp/*.jpg - 刪除 /var/vsp/ JPG 檔',
-            'rm -f /var/vsp/*.yuv - 刪除 /var/vsp/ YUV 檔',
-            'ps aux | grep hd_video - 檢查影片錄製程序',
-            'ps aux | grep diag - 檢查診斷程序',
-            'killall hd_video_record_with_vsp_4dev_smart2_pega_dre - 停止影片錄製',
-            'df -h /tmp - 檢查臨時目錄空間',
-            'df -h /var/vsp - 檢查 VSP 目錄空間',
-            'df -h /mnt/usr - 檢查使用者目錄空間',
-            'free -h - 檢查記憶體使用量',
-            'cat /proc/loadavg - 顯示系統負載',
-            'cat /proc/uptime - 顯示系統運行時間',
-            'lsmod | grep -E "(camera|video|vsp)" - 檢查相關模組',
-            'dmesg | grep -i error - 檢查錯誤訊息',
-            'dmesg | grep -i camera - 檢查攝影機相關訊息'
-        ]
-        
-        self.var_manual = tk.StringVar(value=self.linux_commands[0])
-        cbo_manual = ttk.Combobox(lf_manual, textvariable=self.var_manual, values=self.linux_commands, width=47, state='readonly', font=self.left_font)
-        cbo_manual.grid(row=0, column=0, padx=(0, 6))
+
+        # 由 COMMANDS/linux.txt 讀取
+        self.var_manual = tk.StringVar()
+        self.cbo_manual = ttk.Combobox(lf_manual, textvariable=self.var_manual, values=[], width=47, state='readonly', font=self.left_font)
+        self.cbo_manual.grid(row=0, column=0, padx=(0, 6))
         ttk.Button(lf_manual, text='執行', command=self.on_execute_manual).grid(row=0, column=1)
+        # 啟動即載入
+        self._load_linux_commands()
+
+        # 自訂 Linux 指令輸入列
+        ttk.Label(lf_manual, text='自訂指令', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(8, 0))
+        manual_frame = ttk.Frame(lf_manual)
+        manual_frame.grid(row=2, column=0, columnspan=2, sticky=tk.W)
+        self.var_manual_input = tk.StringVar()
+        self.ent_manual_input = ttk.Entry(manual_frame, textvariable=self.var_manual_input, width=58, font=self.left_font)
+        self.ent_manual_input.pack(side=tk.LEFT)
+        self.ent_manual_input.insert(0, '輸入 Linux 指令，例如：ls -la /mnt/usr/')
+        self.ent_manual_input.bind('<FocusIn>', lambda e: self.ent_manual_input.delete(0, tk.END) if self.var_manual_input.get().startswith('輸入 ') else None)
+        self.ent_manual_input.bind('<Return>', lambda e: self.on_execute_unified())
 
         # 檔案傳輸
         lf_copy = ttk.LabelFrame(parent, text='檔案傳輸（DUT → PC）', padding=8)
@@ -318,25 +283,31 @@ class FourCamDebugTool:
             '/var/vsp/*.bin - VSP 二進位檔案',
             '/var/vsp/*.yml - VSP 設定檔案'
         ]
-        cbo_common = ttk.Combobox(lf_copy, textvariable=self.var_common_path, values=self.common_paths, 
+        self.cbo_common = ttk.Combobox(lf_copy, textvariable=self.var_common_path, values=self.common_paths, 
                                  width=45, state='readonly', font=self.left_font)
-        cbo_common.grid(row=0, column=1, sticky=tk.W, padx=(6, 0))
-        cbo_common.bind('<<ComboboxSelected>>', self.on_common_path_selected)
+        self.cbo_common.grid(row=0, column=1, sticky=tk.W, padx=(6, 0))
+        self.cbo_common.bind('<<ComboboxSelected>>', self.on_common_path_selected)
         
-        self._add_labeled_entry(lf_copy, '來源（DUT glob）', self.var_src_glob, 1, width=42)
+        self.ent_src = self._add_labeled_entry(lf_copy, '來源（DUT glob）', self.var_src_glob, 1, width=42)
         
         # 目標資料夾輸入欄和開啟按鍵
         ttk.Label(lf_copy, text='目標（PC 資料夾）', font=self.left_font).grid(row=2, column=0, sticky=tk.W)
         entry_frame = ttk.Frame(lf_copy)
         entry_frame.grid(row=2, column=1, sticky=tk.W, padx=(6, 0))
-        ent_dst = ttk.Entry(entry_frame, textvariable=self.var_dst_dir, width=42, font=self.left_font)
-        ent_dst.pack(side=tk.LEFT)
+        self.ent_dst = ttk.Entry(entry_frame, textvariable=self.var_dst_dir, width=42, font=self.left_font)
+        self.ent_dst.pack(side=tk.LEFT)
         ttk.Button(entry_frame, text='📁', command=self.on_open_destination_folder, width=3).pack(side=tk.LEFT, padx=(6, 0))
         
         btns2 = ttk.Frame(lf_copy)
         btns2.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
         ttk.Button(btns2, text='使用說明', command=self.on_show_help).pack(side=tk.LEFT)
         ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut).pack(side=tk.LEFT, padx=6)
+
+        # 左側底部統一執行按鈕
+        footer = ttk.Frame(parent)
+        footer.pack(fill=tk.X, pady=(10, 6))
+        self.btn_execute_unified = ttk.Button(footer, text='執行', command=self.on_execute_unified, width=20)
+        self.btn_execute_unified.pack(pady=6)
 
         for child in lf_conn.winfo_children() + lf_cmd.winfo_children() + lf_manual.winfo_children() + lf_copy.winfo_children():
             try:
@@ -533,7 +504,7 @@ class FourCamDebugTool:
     def _load_commands_from(self, path: Path) -> None:
         try:
             self.current_commands = load_commands_from_file(path)
-            display_items = [f"{c.name} = {c.command}" for c in self.current_commands]
+            display_items = [f"{i+1}. {c.name} = {c.command}" for i, c in enumerate(self.current_commands)]
             self.cbo_commands["values"] = display_items
             if display_items:
                 self.cbo_commands.current(0)
@@ -604,22 +575,66 @@ class FourCamDebugTool:
         else:
             messagebox.showwarning('提醒', '沒有指令可執行')
 
-    def on_execute_manual(self) -> None:
-        selected = self.var_manual.get().strip()
-        if not selected:
-            messagebox.showwarning('提醒', '請選擇指令')
+    def on_execute_unified(self) -> None:
+        """統一執行：優先順序 自訂Linux > Linux下拉 > 指令表下拉 > 檔案傳輸。"""
+        # 自訂 Linux（若輸入框有焦點且有內容，或內容非預設提示）
+        manual_text = (self.var_manual_input.get() if hasattr(self, 'var_manual_input') else '').strip()
+        if manual_text and not manual_text.startswith('輸入 '):
+            if self.var_clear_output.get():
+                self.txt_output.delete(1.0, tk.END)
+            self._run_bg(lambda: self._task_exec_command(manual_text))
             return
-        
-        # 根據 checkbox 狀態決定是否清空輸出
+
+        # 指令表下拉（Command.txt）
+        idx_cmd = self.cbo_commands.current()
+        if idx_cmd is not None and 0 <= idx_cmd < len(self.current_commands):
+            if self.var_clear_output.get():
+                self.txt_output.delete(1.0, tk.END)
+            cmd = self.current_commands[idx_cmd].command
+            self._run_bg(lambda: self._task_exec_command(cmd))
+            return
+
+        # 常用 Linux 下拉
+        if hasattr(self, 'cbo_manual') and hasattr(self, 'linux_items'):
+            idx_linux = self.cbo_manual.current()
+            if idx_linux is not None and 0 <= idx_linux < len(self.linux_items):
+                if self.var_clear_output.get():
+                    self.txt_output.delete(1.0, tk.END)
+                _name, cmd = self.linux_items[idx_linux]
+                self._run_bg(lambda: self._task_exec_command(cmd))
+                return
+
+        # 檔案傳輸（檢查來源與目標有效）
+        src = self.var_src_glob.get().strip() if hasattr(self, 'var_src_glob') else ''
+        dst = self.var_dst_dir.get().strip() if hasattr(self, 'var_dst_dir') else ''
+        if src and dst:
+            if self.var_clear_output.get():
+                self.txt_output.delete(1.0, tk.END)
+            self._run_bg(lambda: self._task_copy_from_dut(src, dst))
+            return
+
+        messagebox.showwarning('提醒', '沒有可執行的內容，請先選擇或輸入指令')
+
+    def on_execute_manual(self) -> None:
+        # 以索引對應 COMMANDS/linux.txt 所載入的項目
+        idx = self.cbo_manual.current() if hasattr(self, 'cbo_manual') else -1
+        if idx is None or idx < 0 or not hasattr(self, 'linux_items') or idx >= len(self.linux_items):
+            messagebox.showwarning('提醒', '請先選擇有效的 LINUX 指令')
+            return
+
         if self.var_clear_output.get():
             self.txt_output.delete(1.0, tk.END)
-        
-        # 從選擇的文字中提取指令部分（去掉說明）
-        if ' - ' in selected:
-            cmd = selected.split(' - ')[0].strip()
-        else:
-            cmd = selected
-            
+
+        _name, cmd = self.linux_items[idx]
+        self._run_bg(lambda: self._task_exec_command(cmd))
+
+    def on_execute_manual_input(self) -> None:
+        cmd = (self.var_manual_input.get() or '').strip()
+        if not cmd:
+            messagebox.showwarning('提醒', '請輸入要執行的 Linux 指令')
+            return
+        if self.var_clear_output.get():
+            self.txt_output.delete(1.0, tk.END)
         self._run_bg(lambda: self._task_exec_command(cmd))
 
     def on_show_help(self) -> None:
@@ -641,6 +656,197 @@ class FourCamDebugTool:
             
         except Exception as exc:
             messagebox.showerror('錯誤', f'產生說明文件失敗：{exc}')
+
+    # ---------- LINUX 指令載入 ----------
+    def _get_linux_commands_path(self) -> Path:
+        """優先使用執行檔所在目錄下的 COMMANDS/linux.txt；若不存在，從內嵌資源複製一份後使用外部檔。"""
+        try:
+            exec_dir = Path(getattr(sys, 'frozen', False) and Path(sys.executable).parent or Path.cwd())
+        except Exception:
+            exec_dir = Path.cwd()
+        external_dir = exec_dir / 'COMMANDS'
+        _safe_makedirs(external_dir)
+        external_path = external_dir / 'linux.txt'
+
+        if external_path.exists():
+            return external_path
+
+        # 嘗試從內嵌資源複製到外部，之後固定使用外部檔
+        try:
+            embedded_path = Path(get_resource_path('COMMANDS/linux.txt'))
+            if embedded_path.exists():
+                try:
+                    external_path.write_text(embedded_path.read_text(encoding='utf-8'), encoding='utf-8')
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+        return external_path
+
+    def _ensure_linux_commands_file(self) -> None:
+        path = self._get_linux_commands_path()
+        if not path.exists():
+            default_lines = [
+                '# 常用 LINUX 指令（格式：NAME = COMMAND）',
+                '# 範例：列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/',
+                '',
+                '列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/',
+                '刪除 /mnt/usr/ JPG 檔 = rm -f /mnt/usr/*.jpg',
+                '刪除 /mnt/usr/ YUV 檔 = rm -f /mnt/usr/*.yuv',
+                '刪除 /var/vsp/ JPG 檔 = rm -f /var/vsp/*.jpg',
+                '刪除 /var/vsp/ YUV 檔 = rm -f /var/vsp/*.yuv',
+                '顯示系統資訊 = uname -a',
+                '顯示磁碟使用量 = df -h',
+                '顯示記憶體使用量 = free -h',
+                '顯示目前目錄詳細檔案 = ls -la',
+                '列出根目錄檔案 = ls -la /',
+                '列出臨時目錄檔案 = ls -la /tmp',
+                '列出使用者目錄檔案 = ls -la /mnt/usr',
+                '網路連線 = netstat -an',
+                '網路介面 = ifconfig',
+                '路由表 = route -n',
+                '核心版本 = cat /proc/version',
+                'CPU 資訊 = cat /proc/cpuinfo',
+                '記憶體資訊 = cat /proc/meminfo',
+                '系統運行時間 = uptime',
+                '系統時間 = date',
+                '硬體時鐘 = hwclock',
+                '掛載點 = mount',
+                '已載入模組 = lsmod',
+                'USB 設備 = lsusb',
+                'PCI 設備 = lspci',
+                'I2C 匯流排 0 = i2cdetect -y 0',
+                'I2C 匯流排 1 = i2cdetect -y 1',
+                '最近核心訊息 = dmesg | tail -20',
+                '錯誤訊息過濾 = dmesg | grep -i error',
+                '攝影機訊息過濾 = dmesg | grep -i camera',
+                'VSP 目錄 = ls -la /var/vsp',
+                'TMP TAR 目錄 = ls -la /tmp/tar',
+                '檢查錄影程序 = ps aux | grep hd_video',
+                '檢查診斷程序 = ps aux | grep diag',
+                '停止錄影程序 = killall hd_video_record_with_vsp_4dev_smart2_pega_dre',
+                '檢查 /tmp 空間 = df -h /tmp',
+                '檢查 /var/vsp 空間 = df -h /var/vsp',
+                '檢查 /mnt/usr 空間 = df -h /mnt/usr',
+                '系統負載 = cat /proc/loadavg',
+            ]
+            try:
+                path.write_text('\n'.join(default_lines), encoding='utf-8')
+            except Exception:
+                pass
+
+    def _get_default_linux_commands(self) -> list[tuple[str, str]]:
+        """內建的常用 LINUX 指令（作為補齊來源）。"""
+        return [
+            ('列出 /mnt/usr/ 所有檔案', 'ls -la /mnt/usr/'),
+            ('刪除 /mnt/usr/ JPG 檔', 'rm -f /mnt/usr/*.jpg'),
+            ('刪除 /mnt/usr/ YUV 檔', 'rm -f /mnt/usr/*.yuv'),
+            ('刪除 /var/vsp/ JPG 檔', 'rm -f /var/vsp/*.jpg'),
+            ('刪除 /var/vsp/ YUV 檔', 'rm -f /var/vsp/*.yuv'),
+            ('顯示系統資訊', 'uname -a'),
+            ('顯示磁碟使用量', 'df -h'),
+            ('顯示記憶體使用量', 'free -h'),
+            ('顯示目前目錄詳細檔案', 'ls -la'),
+            ('列出根目錄檔案', 'ls -la /'),
+            ('列出臨時目錄檔案', 'ls -la /tmp'),
+            ('列出使用者目錄檔案', 'ls -la /mnt/usr'),
+            ('網路連線', 'netstat -an'),
+            ('網路介面', 'ifconfig'),
+            ('路由表', 'route -n'),
+            ('核心版本', 'cat /proc/version'),
+            ('CPU 資訊', 'cat /proc/cpuinfo'),
+            ('記憶體資訊', 'cat /proc/meminfo'),
+            ('系統運行時間', 'uptime'),
+            ('系統時間', 'date'),
+            ('硬體時鐘', 'hwclock'),
+            ('掛載點', 'mount'),
+            ('已載入模組', 'lsmod'),
+            ('USB 設備', 'lsusb'),
+            ('PCI 設備', 'lspci'),
+            ('I2C 匯流排 0', 'i2cdetect -y 0'),
+            ('I2C 匯流排 1', 'i2cdetect -y 1'),
+            ('最近核心訊息', 'dmesg | tail -20'),
+            ('錯誤訊息過濾', 'dmesg | grep -i error'),
+            ('攝影機訊息過濾', 'dmesg | grep -i camera'),
+            ('VSP 目錄', 'ls -la /var/vsp'),
+            ('TMP TAR 目錄', 'ls -la /tmp/tar'),
+            ('檢查錄影程序', 'ps aux | grep hd_video'),
+            ('檢查診斷程序', 'ps aux | grep diag'),
+            ('停止錄影程序', 'killall hd_video_record_with_vsp_4dev_smart2_pega_dre'),
+            ('檢查 /tmp 空間', 'df -h /tmp'),
+            ('檢查 /var/vsp 空間', 'df -h /var/vsp'),
+            ('檢查 /mnt/usr 空間', 'df -h /mnt/usr'),
+            ('系統負載', 'cat /proc/loadavg'),
+        ]
+
+    def _append_default_linux_commands_if_missing(self) -> None:
+        """將內建常用指令補齊到 linux.txt（以名稱去重），不覆蓋既有內容。"""
+        path = self._get_linux_commands_path()
+        try:
+            existing_lines = path.read_text(encoding='utf-8').splitlines()
+        except Exception:
+            existing_lines = []
+
+        # 解析既有名稱集合
+        existing_names = set()
+        for raw in existing_lines:
+            line = raw.strip()
+            if not line or line.startswith('#'):
+                continue
+            if ' = ' in line:
+                name, _cmd = line.split(' = ', 1)
+                existing_names.add(name.strip())
+
+        # 準備要追加的行
+        to_add = []
+        for name, cmd in self._get_default_linux_commands():
+            if name not in existing_names:
+                to_add.append(f'{name} = {cmd}')
+
+        if to_add:
+            try:
+                with open(path, 'a', encoding='utf-8') as f:
+                    if existing_lines and existing_lines[-1].strip() != '':
+                        f.write('\n')
+                    f.write('\n'.join(to_add) + '\n')
+            except Exception:
+                pass
+
+    def _load_linux_commands(self) -> None:
+        """讀取 COMMANDS/linux.txt 並更新下拉顯示（含編號）。"""
+        # 僅在外部檔不存在時建立；一旦存在，不再自動改寫內容
+        self._ensure_linux_commands_file()
+        path = self._get_linux_commands_path()
+        items = []
+        try:
+            for raw in path.read_text(encoding='utf-8').splitlines():
+                line = raw.strip()
+                if not line or line.startswith('#'):
+                    continue
+                if ' = ' in line:
+                    name, cmd = line.split(' = ', 1)
+                    name = name.strip()
+                    cmd = cmd.strip()
+                    if name and cmd:
+                        items.append((name, cmd))
+        except Exception as e:
+            self._append_output(f'載入 linux.txt 失敗：{e}', 'error')
+            items = []
+
+        self.linux_items = items
+        display = [f'{i+1}. {name} = {cmd}' for i, (name, cmd) in enumerate(items)]
+        if hasattr(self, 'cbo_manual'):
+            self.cbo_manual['values'] = display
+            if display:
+                self.cbo_manual.current(0)
+                self.var_manual.set(display[0])
+        # 右側輸出框可能尚未建立（發生在左側初始化階段）
+        msg = f'已載入 LINUX 指令：{len(items)} 項，來源 {path}'
+        if hasattr(self, 'txt_output') and self.txt_output:
+            self._append_output(msg)
+        else:
+            logging.info(msg)
 
     def _generate_help_html(self) -> str:
         """產生 HTML 使用說明文件"""
