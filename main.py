@@ -177,10 +177,20 @@ class FourCamDebugTool:
         self._build_right(right)
 
     def _build_left(self, parent: ttk.Frame) -> None:
-        # 標題 + 字體
+        # 標題 + 字體 + 清空按鍵
         top = ttk.Frame(parent)
         top.pack(fill=tk.X)
-        ttk.Label(top, text='4CAM_DEBUG_TOOL', font=('Microsoft JhengHei', 14, 'bold')).pack(side=tk.LEFT)
+        
+        # 4CAM_DEBUG_TOOL 標題（淡綠色反白背景）
+        title_label = ttk.Label(top, text='4CAM_DEBUG_TOOL', font=('Microsoft JhengHei', 14, 'bold'))
+        title_label.pack(side=tk.LEFT)
+        # 設定淡綠色背景
+        title_label.configure(background='lightgreen')
+        
+        # 清空按鍵（大尺寸）
+        ttk.Button(top, text='清空輸出', command=self.on_clear_output, width=12).pack(side=tk.RIGHT, padx=(10, 0))
+        
+        # 字體調整按鍵
         ttk.Button(top, text='+', width=3, command=self.on_font_plus).pack(side=tk.RIGHT, padx=(4, 0))
         ttk.Button(top, text='-', width=3, command=self.on_font_minus).pack(side=tk.RIGHT)
 
@@ -247,7 +257,23 @@ class FourCamDebugTool:
             'lsusb - 顯示 USB 設備',
             'lspci - 顯示 PCI 設備',
             'i2cdetect -y 0 - 偵測 I2C 匯流排 0',
-            'i2cdetect -y 1 - 偵測 I2C 匯流排 1'
+            'i2cdetect -y 1 - 偵測 I2C 匯流排 1',
+            # 4CAM 專用指令
+            'ls -la /tmp/tar - 列出 tar 目錄',
+            'ls -la /var/vsp - 列出 VSP 目錄',
+            'ls -la /mnt/usr - 列出使用者目錄',
+            'ps aux | grep hd_video - 檢查影片錄製程序',
+            'ps aux | grep diag - 檢查診斷程序',
+            'killall hd_video_record_with_vsp_4dev_smart2_pega_dre - 停止影片錄製',
+            'df -h /tmp - 檢查臨時目錄空間',
+            'df -h /var/vsp - 檢查 VSP 目錄空間',
+            'df -h /mnt/usr - 檢查使用者目錄空間',
+            'free -h - 檢查記憶體使用量',
+            'cat /proc/loadavg - 顯示系統負載',
+            'cat /proc/uptime - 顯示系統運行時間',
+            'lsmod | grep -E "(camera|video|vsp)" - 檢查相關模組',
+            'dmesg | grep -i error - 檢查錯誤訊息',
+            'dmesg | grep -i camera - 檢查攝影機相關訊息'
         ]
         
         self.var_manual = tk.StringVar(value=self.linux_commands[0])
@@ -302,12 +328,12 @@ class FourCamDebugTool:
                 pass
 
     def _build_right(self, parent: ttk.Frame) -> None:
-        # 標題 + 連線狀態指示器
+        # 標題 + SSH連線狀態指示器
         top_frame = ttk.Frame(parent)
         top_frame.pack(fill=tk.X)
         ttk.Label(top_frame, text='回傳內容', font=('Microsoft JhengHei', 12, 'bold')).pack(side=tk.LEFT)
         
-        # 連線狀態指示器
+        # SSH 連線狀態指示器（替代 LED 信號燈）
         self.status_indicator = tk.Canvas(top_frame, width=20, height=20, highlightthickness=0)
         self.status_indicator.pack(side=tk.RIGHT, padx=(10, 0))
         self._update_connection_status('disconnected')
@@ -1109,17 +1135,12 @@ class FourCamDebugTool:
                 
                 if files_found:
                     file_count = len(files_found)
-                    if file_count <= 10:
-                        # 檔案少於等於10個，顯示所有檔案
-                        self._append_output(f'📁 找到 {file_count} 個檔案：')
-                        for f in files_found:
-                            # 只顯示檔案名稱，不顯示完整路徑
-                            filename = f.split('/')[-1]
-                            self._append_output(f'  - {filename}')
-                    else:
-                        # 檔案超過10個，只顯示數量
-                        self._append_output(f'📁 找到 {file_count} 個檔案')
-                        self._append_output('💡 檔案數量較多，點擊「開始傳輸」查看詳細清單')
+                    # 顯示所有找到的檔案
+                    self._append_output(f'📁 找到 {file_count} 個檔案：')
+                    for f in files_found:
+                        # 只顯示檔案名稱，不顯示完整路徑
+                        filename = f.split('/')[-1]
+                        self._append_output(f'  - {filename}')
                 else:
                     # 沒有找到有效的檔案路徑
                     self._append_output('⚠️ 沒有找到匹配的檔案')
