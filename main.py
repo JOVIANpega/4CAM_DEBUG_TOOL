@@ -324,21 +324,33 @@ class FourCamDebugTool:
         lf_manual = ttk.LabelFrame(parent, text='常用 Linux 指令', padding=8)
         lf_manual.pack(fill=tk.X)
 
+        # Linux 指令檔案選擇
+        linux_file_frame = ttk.Frame(lf_manual)
+        linux_file_frame.grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 6))
+        
+        ttk.Label(linux_file_frame, text='Linux 指令檔', font=self.left_font).pack(side=tk.LEFT)
+        self.var_linux_file = tk.StringVar(value=str(Path('COMMANDS') / 'linux.txt'))
+        ent_linux_file = ttk.Entry(linux_file_frame, textvariable=self.var_linux_file, width=35, font=self.left_font)
+        ent_linux_file.pack(side=tk.LEFT, padx=(6, 0))
+        btn_pick_linux = ttk.Button(linux_file_frame, text='選擇', command=self.on_pick_linux_file)
+        btn_pick_linux.pack(side=tk.LEFT, padx=(6, 0))
+        Tooltip(btn_pick_linux, text='選擇 Linux 指令檔案', font_size=16)
+
         # 由 COMMANDS/linux.txt 讀取
         self.var_manual = tk.StringVar()
         self.cbo_manual = ttk.Combobox(lf_manual, textvariable=self.var_manual, values=[], width=47, state='readonly', font=self.left_font)
-        self.cbo_manual.grid(row=0, column=0, padx=(0, 6))
+        self.cbo_manual.grid(row=1, column=0, padx=(0, 6))
         Tooltip(self.cbo_manual, font_size=16, min_length=1)
         btn_exec_linux = ttk.Button(lf_manual, text='執行', command=self.on_execute_manual)
-        btn_exec_linux.grid(row=0, column=1)
+        btn_exec_linux.grid(row=1, column=1)
         Tooltip(btn_exec_linux, text='執行常用 Linux 指令', font_size=16)
-        # 啟動即載入
-        self._load_linux_commands()
+        # 啟動即載入（延遲到 UI 建立完成後）
+        self.root.after(100, self._load_linux_commands)
 
         # 手動輸入 Linux 指令輸入列
-        ttk.Label(lf_manual, text='手動輸入指令', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(8, 0))
+        ttk.Label(lf_manual, text='手動輸入指令', font=self.left_font).grid(row=2, column=0, sticky=tk.W, pady=(8, 0))
         manual_frame = ttk.Frame(lf_manual)
-        manual_frame.grid(row=2, column=0, columnspan=2, sticky=tk.W)
+        manual_frame.grid(row=3, column=0, columnspan=2, sticky=tk.W)
         self.var_manual_input = tk.StringVar()
         self.ent_manual_input = ttk.Entry(manual_frame, textvariable=self.var_manual_input, width=58, font=self.left_font)
         self.ent_manual_input.pack(side=tk.LEFT)
@@ -548,6 +560,8 @@ class FourCamDebugTool:
                     self.var_command_file.set(files.get('command_file', str(Path('REF') / 'Command.txt')))
                     self.var_src_glob.set(files.get('src_glob', '/mnt/usr/*.jpg'))
                     self.var_dst_dir.set(files.get('dst_dir', str(Path('D:/VALO360/4CAM'))))
+                    # 載入 Linux 指令檔案設定（延遲到 UI 建立後）
+                    self._linux_file_setting = files.get('linux_file', str(Path('COMMANDS') / 'linux.txt'))
                 
                 # 載入字體設定
                 if 'ui' in settings:
@@ -576,7 +590,8 @@ class FourCamDebugTool:
                 'files': {
                     'command_file': self.var_command_file.get(),
                     'src_glob': self.var_src_glob.get(),
-                    'dst_dir': self.var_dst_dir.get()
+                    'dst_dir': self.var_dst_dir.get(),
+                    'linux_file': self.var_linux_file.get() if hasattr(self, 'var_linux_file') else str(Path('COMMANDS') / 'linux.txt')
                 },
                 'ui': {
                     'font_size': self.font_size,
@@ -618,6 +633,18 @@ class FourCamDebugTool:
         if file_path:
             self.var_command_file.set(file_path)
             self._load_commands_from(Path(file_path))
+
+    def on_pick_linux_file(self) -> None:
+        """選擇 Linux 指令檔案並立刻更新"""
+        file_path = filedialog.askopenfilename(title='選擇 Linux 指令檔案', filetypes=[('Text', '*.txt'), ('All', '*.*')])
+        if file_path:
+            self.var_linux_file.set(file_path)
+            # 立刻更新 Linux 指令
+            self._load_linux_commands_from_file(Path(file_path))
+            # 強制更新 UI
+            self.root.update_idletasks()
+            # 顯示確認訊息
+            self._append_output(f'已選擇 Linux 指令檔案：{file_path}', 'info')
 
     def on_open_command_file(self) -> None:
         """開啟指令表檔案"""
@@ -897,18 +924,45 @@ class FourCamDebugTool:
                 pass
 
     def _load_linux_commands(self) -> None:
-        """讀取 COMMANDS/linux.txt 並更新下拉顯示（含編號）。"""
-        # 僅在外部檔不存在時建立；一旦存在，不再自動改寫內容
-        self._ensure_linux_commands_file()
-        path = self._get_linux_commands_path()
+        """讀取預設的 Linux 指令檔案並更新下拉顯示（含編號）。"""
+        # 確保 var_linux_file 變數存在
+        if not hasattr(self, 'var_linux_file'):
+            # 使用暫存的設定或預設值
+            default_path = getattr(self, '_linux_file_setting', str(Path('COMMANDS') / 'linux.txt'))
+            self.var_linux_file = tk.StringVar(value=default_path)
+        
+        # 使用變數中指定的檔案路徑
+        linux_file_path = self.var_linux_file.get()
+        path = Path(linux_file_path)
+        
+        # 如果檔案不存在，嘗試使用預設路徑
+        if not path.exists():
+            default_path = self._get_linux_commands_path()
+            if default_path.exists():
+                path = default_path
+                self.var_linux_file.set(str(path))
+            else:
+                # 建立預設檔案
+                self._ensure_linux_commands_file()
+                path = self._get_linux_commands_path()
+                self.var_linux_file.set(str(path))
+        
+        self._load_linux_commands_from_file(path)
+
+    def _load_linux_commands_from_file(self, path: Path) -> None:
+        """從指定檔案讀取 Linux 指令並更新下拉顯示（含編號）。"""
         items = []
         try:
             for raw in path.read_text(encoding='utf-8').splitlines():
                 line = raw.strip()
                 if not line or line.startswith('#'):
                     continue
-                if ' = ' in line:
-                    name, cmd = line.split(' = ', 1)
+                # 修正：支援兩種格式：' = ' 和 '='
+                if '=' in line:
+                    if ' = ' in line:
+                        name, cmd = line.split(' = ', 1)
+                    else:
+                        name, cmd = line.split('=', 1)
                     name = name.strip()
                     cmd = cmd.strip()
                     if name and cmd:
@@ -920,11 +974,23 @@ class FourCamDebugTool:
         self.linux_items = items
         display = [f'{i+1}. {name} = {cmd}' for i, (name, cmd) in enumerate(items)]
         if hasattr(self, 'cbo_manual'):
+            # 清除現有選項
+            self.cbo_manual['values'] = []
+            self.cbo_manual.update()
+            
+            # 設定新選項
             self.cbo_manual['values'] = display
             if display:
                 self.cbo_manual.current(0)
                 self.var_manual.set(display[0])
-        # 右側輸出框可能尚未建立（發生在左側初始化階段）
+            else:
+                self.var_manual.set('')
+            
+            # 強制更新下拉選單
+            self.cbo_manual.update()
+            self.root.update_idletasks()
+        
+        # 顯示載入結果
         msg = f'已載入 LINUX 指令：{len(items)} 項，來源 {path}'
         if hasattr(self, 'txt_output') and self.txt_output:
             self._append_output(msg)

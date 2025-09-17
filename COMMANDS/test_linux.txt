@@ -1,0 +1,8 @@
+# 測試用 Linux 指令檔案
+# 格式：NAME = COMMAND
+
+測試指令1 = echo "這是測試指令1"
+測試指令2 = ls -la /tmp
+測試指令3 = df -h
+測試指令4 = free -h
+測試指令5 = ps aux | head -10
