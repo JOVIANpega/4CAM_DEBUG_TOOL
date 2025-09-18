@@ -182,6 +182,12 @@ class FourCamDebugTool:
             style.configure('Hover.TButton', background='#1976d2', foreground='white')
             # 單一輸入框高亮樣式（淡黃色）
             style.configure('Highlight.TEntry', fieldbackground='#fff9c4')
+            # 綠色按鈕樣式（使用說明）
+            style.configure('Green.TButton', background='#4CAF50', foreground='white')
+            style.map('Green.TButton', background=[('active', '#43A047')])
+            # 藍色按鈕樣式（執行 / 執行指令 / 開始傳輸）
+            style.configure('Blue.TButton', background='#1976d2', foreground='white')
+            style.map('Blue.TButton', background=[('active', '#1565c0')])
         except Exception:
             pass
 
@@ -234,44 +240,52 @@ class FourCamDebugTool:
 
     # ---------- 版面 ----------
     def _build_layout(self) -> None:
-        left = ttk.Frame(self.root, padding=10)
-        right = ttk.Frame(self.root, padding=10)
-        left.pack(side=tk.LEFT, fill=tk.BOTH)
-        right.pack(side=tk.RIGHT, fill=tk.BOTH, expand=True)
+        # 左右可調整的分隔視窗
+        self._paned = ttk.Panedwindow(self.root, orient=tk.HORIZONTAL)
+        self._paned.pack(fill=tk.BOTH, expand=True)
+
+        left = ttk.Frame(self._paned, padding=10)
+        right = ttk.Frame(self._paned, padding=10)
+        self._paned.add(left, weight=1)
+        self._paned.add(right, weight=3)
 
         self._build_left(left)
         self._build_right(right)
+
+        # 若有保存的分隔條位置，套用（延後讓視窗初始化完成）
+        def _apply_saved_sash():
+            try:
+                if hasattr(self, '_saved_sash') and isinstance(self._saved_sash, int):
+                    self._safe_set_sash(self._saved_sash)
+            except Exception:
+                pass
+        self.root.after(200, _apply_saved_sash)
 
     def _build_left(self, parent: ttk.Frame) -> None:
         # 標題 + 字體 + 清空按鍵
         top = ttk.Frame(parent)
         top.pack(fill=tk.X)
         
-        # 4CAM_DEBUG_TOOL 標題（淡綠色反白背景）
         title_label = ttk.Label(top, text='4CAM_DEBUG_TOOL', font=('Microsoft JhengHei', 18, 'bold'))
         title_label.pack(side=tk.LEFT)
-        # 設定淡綠色背景
         title_label.configure(background='lightgreen')
         
-        # 清空按鍵（大尺寸）
-        btn_clear = ttk.Button(top, text='清空輸出', command=self.on_clear_output, width=12)
-        btn_clear.pack(side=tk.RIGHT, padx=(10, 0))
+        btn_clear = ttk.Button(top, text='清空輸出', command=self.on_clear_output, width=10)
+        btn_clear.pack(side=tk.RIGHT, padx=(6, 0))
         Tooltip(btn_clear, text='清空右側輸出內容', font_size=16)
         
-        # 字體調整按鍵
         btn_plus = ttk.Button(top, text='+', width=3, command=self.on_font_plus)
         btn_plus.pack(side=tk.RIGHT, padx=(4, 0))
         Tooltip(btn_plus, text='放大字體', font_size=16)
         btn_minus = ttk.Button(top, text='-', width=3, command=self.on_font_minus)
         btn_minus.pack(side=tk.RIGHT)
         Tooltip(btn_minus, text='縮小字體', font_size=16)
-
-        # 連線設定
+        
+        # 連線設定（保留在分頁上方）
         lf_conn = ttk.LabelFrame(parent, text='連線設定', padding=8)
         lf_conn.pack(fill=tk.X, pady=(10, 6))
         ent_dut = self._add_labeled_entry(lf_conn, 'DUT IP', self.var_dut_ip, 0)
         self.ent_pc_ip = self._add_labeled_entry(lf_conn, 'PC IP', self.var_pc_ip, 1)
-        # 啟動與 DUT 變更時自動偵測本機來源 IP；若使用者手動輸入則移除灰底樣式
         try:
             self.ent_pc_ip.configure(style='Hint.TEntry')
             ent_dut.bind('<FocusOut>', lambda _e: self._auto_fill_pc_ip())
@@ -279,7 +293,6 @@ class FourCamDebugTool:
         except Exception:
             pass
         self._add_labeled_entry(lf_conn, 'Username', self.var_username, 2)
-        # 移除密碼欄位，因為 DUT 不需要密碼
         self._add_labeled_entry(lf_conn, 'Timeout(sec)', self.var_timeout, 3)
         btns = ttk.Frame(lf_conn)
         btns.grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
@@ -290,8 +303,27 @@ class FourCamDebugTool:
         btn_reload.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_reload, text='重新讀取 Command.txt 指令', font_size=16)
 
-        # 指令控制
-        lf_cmd = ttk.LabelFrame(parent, text='指令控制（Command.txt）', padding=8)
+        # 全域控制（放置於左側主區塊，連線設定下）
+        global_ctrl = ttk.Frame(parent)
+        global_ctrl.pack(fill=tk.X, pady=(4, 4))
+        chk_clear = ttk.Checkbutton(global_ctrl, text='每次下指令清除舊訊息', variable=self.var_clear_output)
+        chk_clear.pack(side=tk.LEFT)
+        btn_help_global = ttk.Button(global_ctrl, text='使用說明', command=self.on_show_help, style='Green.TButton')
+        btn_help_global.pack(side=tk.RIGHT)
+        Tooltip(btn_help_global, text='開啟使用說明文件', font_size=16)
+        
+        # Notebook 分頁容器
+        nb = ttk.Notebook(parent)
+        nb.pack(fill=tk.BOTH, expand=False)
+        tab_cmd = ttk.Frame(nb)
+        tab_linux = ttk.Frame(nb)
+        tab_copy = ttk.Frame(nb)
+        nb.add(tab_cmd, text='指令')
+        nb.add(tab_linux, text='LINUX 指令')
+        nb.add(tab_copy, text='檔案傳輸')
+        
+        # 指令控制（放入 指令 分頁）
+        lf_cmd = ttk.LabelFrame(tab_cmd, text='指令控制（Command.txt）', padding=8)
         lf_cmd.pack(fill=tk.X, pady=(6, 6))
         ttk.Label(lf_cmd, text='指令檔', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
         ent_cmdfile = ttk.Entry(lf_cmd, textvariable=self.var_command_file, width=42, font=self.left_font)
@@ -299,55 +331,49 @@ class FourCamDebugTool:
         btn_pick_cmd = ttk.Button(lf_cmd, text='選擇', command=self.on_pick_command_file)
         btn_pick_cmd.grid(row=0, column=2, padx=(6, 0))
         Tooltip(btn_pick_cmd, text='選擇 Command.txt 檔案', font_size=16)
-
+        
         ttk.Label(lf_cmd, text='指令選擇', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(6, 0))
         self.cbo_commands = ttk.Combobox(lf_cmd, textvariable=self.var_command_choice, width=50, state='readonly', font=self.left_font)
         self.cbo_commands.grid(row=1, column=1, columnspan=2, sticky=tk.W, padx=(6, 0), pady=(6, 0))
         self.cbo_commands.bind('<<ComboboxSelected>>', self.on_command_selected)
-        # 放大 tooltip（靠近就顯示）
         Tooltip(self.cbo_commands, font_size=16, min_length=1)
         
-        # 執行指令按鍵和開啟指令表按鍵
         btn_frame = ttk.Frame(lf_cmd)
         btn_frame.grid(row=2, column=0, columnspan=3, sticky=tk.E, pady=(6, 0))
         btn_open_cmd = ttk.Button(btn_frame, text='開啟指令表', command=self.on_open_command_file)
         btn_open_cmd.pack(side=tk.RIGHT, padx=(6, 0))
         Tooltip(btn_open_cmd, text='以系統預設編輯器開啟 Command.txt', font_size=16)
-        btn_exec_cmd = ttk.Button(btn_frame, text='執行指令', command=self.on_execute_selected_command)
+        btn_exec_cmd = ttk.Button(btn_frame, text='執行指令', command=self.on_execute_selected_command, style='Blue.TButton')
         btn_exec_cmd.pack(side=tk.RIGHT)
         Tooltip(btn_exec_cmd, text='執行上方選取的指令', font_size=16)
         
-        # 清空輸出選項
-        ttk.Checkbutton(lf_cmd, text='執行新指令時清空輸出', variable=self.var_clear_output).grid(row=3, column=0, columnspan=3, sticky=tk.W, pady=(6, 0))
-
-        # 常用 Linux 指令
-        lf_manual = ttk.LabelFrame(parent, text='常用 Linux 指令', padding=8)
+        # 清空勾選已移到全域頂部
+        
+        # LINUX 指令（放入 LINUX 分頁）
+        lf_manual = ttk.LabelFrame(tab_linux, text='常用 Linux 指令', padding=8)
         lf_manual.pack(fill=tk.X)
-
-        # Linux 指令檔案選擇
         linux_file_frame = ttk.Frame(lf_manual)
         linux_file_frame.grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 6))
-        
         ttk.Label(linux_file_frame, text='Linux 指令檔', font=self.left_font).pack(side=tk.LEFT)
         self.var_linux_file = tk.StringVar(value=str(Path('COMMANDS') / 'linux.txt'))
         ent_linux_file = ttk.Entry(linux_file_frame, textvariable=self.var_linux_file, width=35, font=self.left_font)
         ent_linux_file.pack(side=tk.LEFT, padx=(6, 0))
         btn_pick_linux = ttk.Button(linux_file_frame, text='選擇', command=self.on_pick_linux_file)
         btn_pick_linux.pack(side=tk.LEFT, padx=(6, 0))
+        btn_open_linux = ttk.Button(linux_file_frame, text='開啟指令檔', command=lambda: self._open_file_path(self.var_linux_file.get()))
+        btn_open_linux.pack(side=tk.LEFT, padx=(6, 0))
         Tooltip(btn_pick_linux, text='選擇 Linux 指令檔案', font_size=16)
-
-        # 由 COMMANDS/linux.txt 讀取
+        Tooltip(btn_open_linux, text='以系統預設程式開啟 Linux 指令檔', font_size=16)
+        
         self.var_manual = tk.StringVar()
         self.cbo_manual = ttk.Combobox(lf_manual, textvariable=self.var_manual, values=[], width=47, state='readonly', font=self.left_font)
         self.cbo_manual.grid(row=1, column=0, padx=(0, 6))
         Tooltip(self.cbo_manual, font_size=16, min_length=1)
-        btn_exec_linux = ttk.Button(lf_manual, text='執行', command=self.on_execute_manual)
+        btn_exec_linux = ttk.Button(lf_manual, text='執行', command=self.on_execute_manual, style='Blue.TButton')
         btn_exec_linux.grid(row=1, column=1)
         Tooltip(btn_exec_linux, text='執行常用 Linux 指令', font_size=16)
-        # 啟動即載入（延遲到 UI 建立完成後）
         self.root.after(100, self._load_linux_commands)
-
-        # 手動輸入 Linux 指令輸入列
+        
         ttk.Label(lf_manual, text='手動輸入指令', font=self.left_font).grid(row=2, column=0, sticky=tk.W, pady=(8, 0))
         manual_frame = ttk.Frame(lf_manual)
         manual_frame.grid(row=3, column=0, columnspan=2, sticky=tk.W)
@@ -360,12 +386,10 @@ class FourCamDebugTool:
         btn_exec_manual = ttk.Button(manual_frame, text='執行自訂', command=self.on_execute_manual_input)
         btn_exec_manual.pack(side=tk.LEFT, padx=(6, 0))
         Tooltip(btn_exec_manual, text='執行手動輸入的 Linux 指令', font_size=16)
-
-        # 檔案傳輸
-        lf_copy = ttk.LabelFrame(parent, text='檔案傳輸（DUT → PC）', padding=8)
-        lf_copy.pack(fill=tk.X, pady=(6, 0))
         
-        # 常用檔案路徑下拉選單
+        # 檔案傳輸（放入 檔案傳輸 分頁）
+        lf_copy = ttk.LabelFrame(tab_copy, text='檔案傳輸（DUT → PC）', padding=8)
+        lf_copy.pack(fill=tk.X, pady=(6, 0))
         ttk.Label(lf_copy, text='常用路徑', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
         self.var_common_path = tk.StringVar()
         self.common_paths = [
@@ -389,7 +413,6 @@ class FourCamDebugTool:
         
         self.ent_src = self._add_labeled_entry(lf_copy, '來源（DUT glob）', self.var_src_glob, 1, width=42)
         
-        # 目標資料夾輸入欄和開啟按鍵
         ttk.Label(lf_copy, text='目標（PC 資料夾）', font=self.left_font).grid(row=2, column=0, sticky=tk.W)
         entry_frame = ttk.Frame(lf_copy)
         entry_frame.grid(row=2, column=1, sticky=tk.W, padx=(6, 0))
@@ -401,15 +424,12 @@ class FourCamDebugTool:
         
         btns2 = ttk.Frame(lf_copy)
         btns2.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
-        btn_help = ttk.Button(btns2, text='使用說明', command=self.on_show_help)
-        btn_help.pack(side=tk.LEFT)
-        Tooltip(btn_help, text='開啟使用說明文件', font_size=16)
-        btn_copy = ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut)
+        # 使用說明已移到全域頂部
+        btn_copy = ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut, style='Blue.TButton')
         btn_copy.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_copy, text='從 DUT 複製檔案到 PC', font_size=16)
-
-        # （移除）底部統一執行按鈕
-
+        
+        # 套用字體
         for child in lf_conn.winfo_children() + lf_cmd.winfo_children() + lf_manual.winfo_children() + lf_copy.winfo_children():
             try:
                 child.configure(font=self.left_font)
@@ -544,6 +564,10 @@ class FourCamDebugTool:
                 if 'window' in settings:
                     geom = settings['window'].get('geometry', '900x560')
                     self.root.geometry(geom)
+                    # 分隔條位置
+                    sash = settings['window'].get('sash')
+                    if isinstance(sash, int):
+                        self._saved_sash = sash
                 
                 # 載入連線設定
                 if 'connection' in settings:
@@ -576,10 +600,20 @@ class FourCamDebugTool:
     def _save_settings(self) -> None:
         """儲存設定檔案"""
         try:
+            # 讀取分隔條位置
+            try:
+                sash_pos = int(self._paned.sashpos(0)) if hasattr(self, '_paned') else None
+            except Exception:
+                sash_pos = None
+
+            window_cfg = {
+                'geometry': self.root.geometry()
+            }
+            if sash_pos is not None:
+                window_cfg['sash'] = sash_pos
+
             settings = {
-                'window': {
-                    'geometry': self.root.geometry()
-                },
+                'window': window_cfg,
                 'connection': {
                     'dut_ip': self.var_dut_ip.get(),
                     'pc_ip': self.var_pc_ip.get(),
@@ -667,6 +701,27 @@ class FourCamDebugTool:
                 self._append_output(f'無法開啟指令表：{e}', 'error')
         else:
             messagebox.showwarning('提醒', '指令表檔案不存在，請先選擇有效的指令表檔案')
+
+    def _open_file_path(self, path_str: str) -> None:
+        """以系統預設程式開啟任意檔案路徑。"""
+        try:
+            if not path_str:
+                messagebox.showwarning('提醒', '沒有可開啟的檔案')
+                return
+            p = Path(path_str)
+            if not p.exists():
+                messagebox.showwarning('提醒', f'檔案不存在：{p}')
+                return
+            import subprocess, platform
+            if platform.system() == 'Windows':
+                os.startfile(str(p))
+            elif platform.system() == 'Darwin':
+                subprocess.run(['open', str(p)])
+            else:
+                subprocess.run(['xdg-open', str(p)])
+            self._append_output(f'已開啟檔案：{p}', 'info')
+        except Exception as e:
+            self._append_output(f'無法開啟檔案：{e}', 'error')
 
     def on_reload_commands(self, *_args) -> None:
         self._load_commands_from(Path(self.var_command_file.get()))
@@ -1380,9 +1435,32 @@ class FourCamDebugTool:
 
     def _on_closing(self) -> None:
         """視窗關閉時的處理"""
-        self._save_settings()
-        self.ssh.close()
-        self.root.destroy()
+        try:
+            self._save_settings()
+        except Exception:
+            pass
+
+        # 非阻塞關閉 SSH：在背景執行，避免 GUI 主執行緒卡住
+        def _shutdown():
+            try:
+                self.ssh.close()
+            except Exception:
+                pass
+
+        try:
+            threading.Thread(target=_shutdown, daemon=True).start()
+        except Exception:
+            # 若建立背景執行緒失敗，改為同步關閉
+            try:
+                self.ssh.close()
+            except Exception:
+                pass
+
+        # 立即銷毀主視窗，讓 mainloop 儘快退出
+        try:
+            self.root.destroy()
+        except Exception:
+            pass
 
     # ---------- 自動偵測 PC IP ----------
     def _auto_fill_pc_ip(self) -> None:
@@ -1707,6 +1785,17 @@ class FourCamDebugTool:
                     
         except Exception as e:
             logging.error(f"更新字體大小失敗: {e}")
+
+    def _safe_set_sash(self, pos: int) -> None:
+        """安全設定分隔條位置。"""
+        try:
+            if hasattr(self, '_paned') and self._paned:
+                # 位置界於 100 與 視窗寬度-200 之間，以避免不可視
+                total = self.root.winfo_width() or 900
+                clamped = max(100, min(total - 200, pos))
+                self._paned.sashpos(0, clamped)
+        except Exception:
+            pass
 
     def _append_output(self, text: str, tag: str = None) -> None:
         """添加輸出到右側文字區域，支援彩色標籤"""

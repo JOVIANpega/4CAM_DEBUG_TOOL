@@ -138,12 +138,52 @@ class SSHClientManager:
             raise Exception(f"SSH 連線失敗: {e}")
 
     def close(self) -> None:
+        """關閉 SSH 與 SFTP，盡量快速且不阻塞。"""
         try:
+            # 優先關閉 SFTP，避免阻塞在資料傳輸
             if self._sftp:
-                self._sftp.close()
+                try:
+                    self._sftp.close()
+                except Exception:
+                    pass
         finally:
             if self._client:
-                self._client.close()
+                try:
+                    transport = None
+                    try:
+                        transport = self._client.get_transport()
+                    except Exception:
+                        transport = None
+
+                    # 降低 keepalive，嘗試讓通道快速結束
+                    if transport:
+                        try:
+                            transport.set_keepalive(0)
+                        except Exception:
+                            pass
+
+                    self._client.close()
+
+                    # 額外嘗試關閉底層 socket（若可取得）
+                    try:
+                        if transport and hasattr(transport, 'sock') and transport.sock:
+                            try:
+                                transport.sock.settimeout(0.2)
+                            except Exception:
+                                pass
+                            try:
+                                transport.sock.shutdown(2)
+                            except Exception:
+                                pass
+                            try:
+                                transport.sock.close()
+                            except Exception:
+                                pass
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+
         self._sftp = None
         self._client = None
         self._connected = False
