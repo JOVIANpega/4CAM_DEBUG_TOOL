@@ -28,6 +28,7 @@ import logging
 import json
 from pathlib import Path
 import socket
+import datetime
 
 # 本地模組
 from ssh_client import SSHClientManager
@@ -435,6 +436,13 @@ class FourCamDebugTool:
                 child.configure(font=self.left_font)
             except Exception:
                 pass
+
+        # 左側底部：存取 LOG 按鈕
+        bottom_frame = ttk.Frame(parent)
+        bottom_frame.pack(fill=tk.X, pady=(4, 0))
+        btn_save_log = ttk.Button(bottom_frame, text='存取 LOG 資料', command=self.on_save_log_click)
+        btn_save_log.pack(side=tk.LEFT)
+        Tooltip(btn_save_log, text='將右側輸出全部寫入 LOG/時間日期分鐘.log', font_size=16)
 
     def _build_right(self, parent: ttk.Frame) -> None:
         # 標題 + SSH連線狀態指示器
@@ -1799,7 +1807,17 @@ class FourCamDebugTool:
 
     def _append_output(self, text: str, tag: str = None) -> None:
         """添加輸出到右側文字區域，支援彩色標籤"""
-        self.txt_output.insert(tk.END, text.rstrip() + '\n')
+        # 對 Linux 指令送出與結果之間插入分段空白行，提升可讀性
+        normalized = text.rstrip()
+        if normalized.startswith('送出指令:'):
+            # 若前一行不是空行，則先補一空行
+            try:
+                prev = self.txt_output.get('end-2l linestart', 'end-1l').strip()
+                if prev:
+                    self.txt_output.insert(tk.END, '\n')
+            except Exception:
+                pass
+        self.txt_output.insert(tk.END, normalized + '\n')
         
         # 如果指定了標籤，應用顏色
         if tag:
@@ -1896,6 +1914,34 @@ class FourCamDebugTool:
 
     def run(self) -> None:
         self.root.mainloop()
+
+    # ---------- 檔案/LOG ----------
+    def on_save_log_click(self) -> None:
+        """將右側輸出內容寫入 LOG/時間日期分鐘.log"""
+        try:
+            content = self.txt_output.get('1.0', tk.END).rstrip()
+            if not content:
+                messagebox.showinfo('提示', '目前沒有可寫入的輸出內容')
+                return
+            log_dir = Path('LOG')
+            _safe_makedirs(log_dir)
+            ts = datetime.datetime.now().strftime('%Y%m%d_%H%M')
+            file_path = log_dir / f'{ts}.log'
+            file_path.write_text(content + '\n', encoding='utf-8')
+            self._append_output(f'已寫入 LOG：{file_path}', 'info')
+            # 立刻以系統預設程式開啟該檔案
+            try:
+                import platform, subprocess, os as _os
+                if platform.system() == 'Windows':
+                    _os.startfile(str(file_path))
+                elif platform.system() == 'Darwin':
+                    subprocess.run(['open', str(file_path)])
+                else:
+                    subprocess.run(['xdg-open', str(file_path)])
+            except Exception:
+                pass
+        except Exception as exc:
+            messagebox.showerror('錯誤', f'寫入 LOG 失敗：{exc}')
 
 
 def main() -> None:

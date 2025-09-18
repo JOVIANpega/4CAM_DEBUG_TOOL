@@ -6,10 +6,6 @@ READ sn mb = diag -g sn mb
 READ sku = diag -g sku
 READ version = pegacmd version
 
-FIXBUG1= ls -la /var/vsp/*
-FIXBUG2=cp -prf /usr/vsp/* /var/vsp/
-FIXBUG3= diag -s snapshot 1 4
-
 INITIAL SNAP=diag -s snapshot 1 4
 # 快照指令 yuv
 HD_snapshot_0 = diag -s hdr_snapshot 2 0
