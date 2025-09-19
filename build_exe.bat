@@ -40,8 +40,19 @@ if exist "build" rmdir /s /q "build"
 if exist "dist" rmdir /s /q "dist"
 if exist "__pycache__" rmdir /s /q "__pycache__"
 
-REM 設定版本號
-set VERSION=v1.2
+REM 設定版本號與產生版本資訊檔（改用 Python 腳本以避免轉義問題）
+echo 產生版本資訊資源...
+python create_version_info.py
+if errorlevel 1 (
+    echo 錯誤：version_info.txt 產生失敗
+    pause
+    exit /b 1
+)
+
+for /f "usebackq delims=" %%v in (`type version_info.txt ^| findstr /i "FileVersion"`) do set VERSION=%%v
+rem VERSION 行格式如：StringStruct('FileVersion', 'v1.2.3'), 取其中的版本字串
+for /f "tokens=2 delims='" %%a in ("%VERSION%") do set VERSION=%%a
+if "%VERSION%"=="" set VERSION=v1.2.0
 set EXE_NAME=4CAM_DEBUG_TOOL_%VERSION%
 
 echo.
@@ -105,10 +116,10 @@ if not exist "COMMANDS\linux.txt" (
 REM 檢查是否有圖示檔案
 if exist "assets\icon.ico" (
     echo 使用自訂圖示打包...
-    pyinstaller --onefile --noconsole --icon=assets/icon.ico --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
+    pyinstaller --onefile --noconsole --icon=assets/icon.ico --version-file version_info.txt --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
 ) else (
     echo 未找到圖示檔案，使用預設圖示打包...
-    pyinstaller --onefile --noconsole --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
+    pyinstaller --onefile --noconsole --version-file version_info.txt --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
 )
 
 if errorlevel 1 (
@@ -127,15 +138,12 @@ if exist "dist\%EXE_NAME%.exe" (
     echo ========================================
     echo.
     
-    REM 複製資源目錄到 dist
+    REM 複製資源目錄到 dist（強制同步最新檔案）
     echo 複製資源目錄到 dist...
     if exist "COMMANDS" (
-        if not exist "dist\COMMANDS" (
-            xcopy "COMMANDS" "dist\COMMANDS" /E /I /Q
-            echo - COMMANDS 目錄已複製
-        ) else (
-            echo - dist\COMMANDS 已存在，略過複製（避免覆蓋您的修改）
-        )
+        if exist "dist\COMMANDS" rmdir /s /q "dist\COMMANDS"
+        xcopy "COMMANDS" "dist\COMMANDS" /E /I /Q /Y
+        echo - COMMANDS 目錄已同步
     )
     if exist "REF" (
         xcopy "REF" "dist\REF" /E /I /Q

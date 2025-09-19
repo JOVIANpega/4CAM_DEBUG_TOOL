@@ -402,6 +402,27 @@ class FourCamDebugTool:
         btn_exec_manual = ttk.Button(manual_frame, text='執行自訂', command=self.on_execute_manual_input)
         btn_exec_manual.pack(side=tk.LEFT, padx=(6, 0))
         Tooltip(btn_exec_manual, text='執行手動輸入的 Linux 指令', font_size=16)
+
+        # 清理快捷（勾選多項後一次執行）
+        lf_cleanup = ttk.LabelFrame(tab_linux, text='清理快捷（勾選後按下執行）', padding=8)
+        lf_cleanup.pack(fill=tk.X, pady=(8, 0))
+        self.var_del_usr_jpg = tk.BooleanVar(value=False)
+        self.var_del_usr_yuv = tk.BooleanVar(value=False)
+        self.var_del_vsp_jpg = tk.BooleanVar(value=False)
+        self.var_del_vsp_yuv = tk.BooleanVar(value=False)
+
+        ck1 = ttk.Checkbutton(lf_cleanup, text='刪除 /mnt/usr/ JPG', variable=self.var_del_usr_jpg)
+        ck2 = ttk.Checkbutton(lf_cleanup, text='刪除 /mnt/usr/ YUV', variable=self.var_del_usr_yuv)
+        ck3 = ttk.Checkbutton(lf_cleanup, text='刪除 /var/vsp/ JPG', variable=self.var_del_vsp_jpg)
+        ck4 = ttk.Checkbutton(lf_cleanup, text='刪除 /var/vsp/ YUV', variable=self.var_del_vsp_yuv)
+        ck1.grid(row=0, column=0, sticky=tk.W, padx=(0, 12))
+        ck2.grid(row=0, column=1, sticky=tk.W, padx=(0, 12))
+        ck3.grid(row=1, column=0, sticky=tk.W, padx=(0, 12), pady=(6, 0))
+        ck4.grid(row=1, column=1, sticky=tk.W, padx=(0, 12), pady=(6, 0))
+
+        btn_cleanup = ttk.Button(lf_cleanup, text='執行刪除', command=self.on_execute_cleanup, style='Blue.TButton')
+        btn_cleanup.grid(row=0, column=2, rowspan=2, sticky=tk.E, padx=(12, 0))
+        Tooltip(btn_cleanup, text='依勾選項目執行刪除指令', font_size=16)
         
         # 檔案傳輸（放入 檔案傳輸 分頁）
         lf_copy = ttk.LabelFrame(tab_copy, text='檔案傳輸（DUT → PC）', padding=8)
@@ -441,6 +462,9 @@ class FourCamDebugTool:
         btns2 = ttk.Frame(lf_copy)
         btns2.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
         # 使用說明已移到全域頂部
+        btn_copy_all = ttk.Button(btns2, text='將DUT所有資料下載到PC', command=self.on_copy_all_from_dut)
+        btn_copy_all.pack(side=tk.LEFT)
+        Tooltip(btn_copy_all, text='依常用類型一次下載並自動分類到 JPG/YUV/BIN/CONFIG/LOG', font_size=16)
         btn_copy = ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut, style='Blue.TButton')
         btn_copy.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_copy, text='從 DUT 複製檔案到 PC', font_size=16)
@@ -716,6 +740,28 @@ class FourCamDebugTool:
             self.root.update_idletasks()
             # 顯示確認訊息
             self._append_output(f'已選擇 Linux 指令檔案：{file_path}', 'info')
+
+    def on_execute_cleanup(self) -> None:
+        """執行 Linux TAB 內勾選的清理刪除指令。"""
+        try:
+            cmds: list[str] = []
+            if hasattr(self, 'var_del_usr_jpg') and self.var_del_usr_jpg.get():
+                cmds.append('rm -f /mnt/usr/*.jpg')
+            if hasattr(self, 'var_del_usr_yuv') and self.var_del_usr_yuv.get():
+                cmds.append('rm -f /mnt/usr/*.yuv')
+            if hasattr(self, 'var_del_vsp_jpg') and self.var_del_vsp_jpg.get():
+                cmds.append('rm -f /var/vsp/*.jpg')
+            if hasattr(self, 'var_del_vsp_yuv') and self.var_del_vsp_yuv.get():
+                cmds.append('rm -f /var/vsp/*.yuv')
+
+            if not cmds:
+                self._append_output('未勾選任何刪除項目', 'warning')
+                return
+
+            multi = '||'.join(cmds)
+            self._run_bg(lambda: self._task_exec_command(multi))
+        except Exception as e:
+            self._append_output(f'執行刪除失敗：{e}', 'error')
 
     def on_open_command_file(self) -> None:
         """開啟指令表檔案"""
@@ -1375,6 +1421,41 @@ class FourCamDebugTool:
             
         self._run_bg(lambda: self._task_copy_from_dut(src, dst))
 
+    def on_copy_all_from_dut(self) -> None:
+        """將常用類型一次下載並分類到子資料夾。"""
+        try:
+            # 以 D:\VALO360 作為分類根目錄
+            base_dst = Path(r'D:\VALO360')
+            plans = [
+                # /mnt/usr
+                ('/mnt/usr/*.jpg', base_dst / 'JPG'),
+                ('/mnt/usr/*.yuv', base_dst / 'YUV'),
+                ('/mnt/usr/*.bin', base_dst / 'BIN'),
+                ('/mnt/usr/*.yml', base_dst / 'CONFIG'),
+                ('/mnt/usr/*.log', base_dst / 'LOG'),
+                # /var/vsp
+                ('/var/vsp/*.jpg', base_dst / 'JPG'),
+                ('/var/vsp/*.yuv', base_dst / 'YUV'),
+                ('/var/vsp/*.bin', base_dst / 'BIN'),
+                ('/var/vsp/*.yml', base_dst / 'CONFIG'),
+                ('/var/vsp/*.log', base_dst / 'LOG'),
+                # /tmp 也下載
+                ('/tmp/*.jpg', base_dst / 'JPG'),
+                ('/tmp/*.yuv', base_dst / 'YUV'),
+                ('/tmp/*.bin', base_dst / 'BIN'),
+                ('/tmp/*.log', base_dst / 'LOG'),
+            ]
+            # 逐項在背景執行，序列化下載避免裝置壓力
+            def _run_batch():
+                for src_glob, dst_dir in plans:
+                    try:
+                        self._task_copy_from_dut(src_glob, str(dst_dir))
+                    except Exception as e:
+                        self._append_output(f'批次下載錯誤：{e}', 'error')
+            self._run_bg(_run_batch)
+        except Exception as e:
+            self._append_output(f'無法啟動批次下載：{e}', 'error')
+
     def on_common_path_selected(self, event=None) -> None:
         """處理常用路徑選擇"""
         selected = self.var_common_path.get()
@@ -1410,7 +1491,7 @@ class FourCamDebugTool:
             self._run_bg(lambda: self._task_check_files_and_show_info(path))
 
     def on_open_destination_folder(self) -> None:
-        """開啟目標資料夾"""
+        """開啟目標資料夾（優先開啟 D:\\VALO360 根目錄）。"""
         try:
             dst_path = self.var_dst_dir.get().strip()
             if not dst_path:
@@ -1419,25 +1500,24 @@ class FourCamDebugTool:
             
             from pathlib import Path
             import os
-            
+            base = Path(r'D:\\VALO360')
             dst = Path(dst_path)
-            
-            # 如果資料夾不存在，先建立
-            if not dst.exists():
+            # 優先開啟 D:\VALO360（若目標在其底下）
+            to_open = base if str(dst).upper().startswith(str(base).upper()) else dst
+            # 確保要開啟的目錄存在
+            if not to_open.exists():
                 try:
-                    dst.mkdir(parents=True, exist_ok=True)
-                    self._append_output(f'已建立資料夾：{dst}')
+                    to_open.mkdir(parents=True, exist_ok=True)
+                    self._append_output(f'已建立資料夾：{to_open}')
                 except Exception as e:
                     messagebox.showerror('錯誤', f'無法建立資料夾：{e}')
                     return
-            
-            # 使用系統預設程式開啟資料夾
-            if os.name == 'nt':  # Windows
-                os.startfile(str(dst))
-            elif os.name == 'posix':  # macOS and Linux
-                os.system(f'open "{dst}"' if os.uname().sysname == 'Darwin' else f'xdg-open "{dst}"')
-            
-            self._append_output(f'已開啟資料夾：{dst}')
+            # 開啟
+            if os.name == 'nt':
+                os.startfile(str(to_open))
+            elif os.name == 'posix':
+                os.system(f'open "{to_open}"' if os.uname().sysname == 'Darwin' else f'xdg-open "{to_open}"')
+            self._append_output(f'已開啟資料夾：{to_open}')
             
         except Exception as exc:
             messagebox.showerror('錯誤', f'開啟資料夾失敗：{exc}')
@@ -1493,6 +1573,11 @@ class FourCamDebugTool:
         def _shutdown():
             try:
                 self.ssh.close()
+            except Exception:
+                pass
+            # 最多等待 1 秒，確保背景關閉不拖延主程序銷毀
+            try:
+                time.sleep(1)
             except Exception:
                 pass
 
@@ -1772,6 +1857,14 @@ class FourCamDebugTool:
                             for f in files:
                                 if f.is_file():
                                     self._append_output(f'  - {f.name}')
+                    except Exception:
+                        pass
+                    # 自動開啟 D:\VALO360 根目錄
+                    try:
+                        import os
+                        base = Path(r'D:\\VALO360')
+                        if os.name == 'nt' and base.exists():
+                            os.startfile(str(base))
                     except Exception:
                         pass
                 else:
