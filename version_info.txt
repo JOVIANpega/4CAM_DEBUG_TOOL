@@ -1,7 +1,7 @@
 VSVersionInfo(
   ffi=FixedFileInfo(
-    filevers=(1, 4, 0, 0),
-    prodvers=(1, 4, 0, 0),
+    filevers=(1, 8, 0, 0),
+    prodvers=(1, 8, 0, 0),
     mask=0x3f,
     flags=0x0,
     OS=0x40004,
@@ -14,12 +14,12 @@ VSVersionInfo(
       StringTable('040904B0', [
         StringStruct('CompanyName', '4CAM DEBUG TOOL'),
         StringStruct('FileDescription', '4CAM DEBUG TOOL'),
-        StringStruct('FileVersion', 'v1.4'),
+        StringStruct('FileVersion', 'v1.8'),
         StringStruct('InternalName', '4CAM_DEBUG_TOOL'),
         StringStruct('LegalCopyright', '(C) 2025'),
         StringStruct('OriginalFilename', '4CAM_DEBUG_TOOL.exe'),
         StringStruct('ProductName', '4CAM DEBUG TOOL'),
-        StringStruct('ProductVersion', 'v1.4')
+        StringStruct('ProductVersion', 'v1.8')
       ])
     ]),
     VarFileInfo([VarStruct('Translation', [1033, 1200])])

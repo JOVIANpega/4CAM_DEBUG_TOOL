@@ -177,20 +177,96 @@ class FourCamDebugTool:
         self.ssh = SSHClientManager()
         self.settings_file = Path('settings.json')
         self.connection_status = 'disconnected'  # disconnected, connecting, connected
+        # 儲存元件原始樣式（提供 hover 後恢復）
+        try:
+            import weakref
+            self._orig_styles = weakref.WeakKeyDictionary()
+        except Exception:
+            self._orig_styles = {}
 
         # TTK 主題與按鈕 hover 樣式
         try:
             style = ttk.Style(self.root)
             style.theme_use('clam')
-            style.configure('Hover.TButton', background='#1976d2', foreground='white')
+            style.configure('Hover.TButton', background='#1976d2', foreground='white', padding=(10, 6))
             # 單一輸入框高亮樣式（淡黃色）
             style.configure('Highlight.TEntry', fieldbackground='#fff9c4')
             # 綠色按鈕樣式（使用說明）
-            style.configure('Green.TButton', background='#4CAF50', foreground='white')
+            style.configure('Green.TButton', background='#4CAF50', foreground='white', padding=(10, 6))
             style.map('Green.TButton', background=[('active', '#43A047')])
             # 藍色按鈕樣式（執行 / 執行指令 / 開始傳輸）
-            style.configure('Blue.TButton', background='#1976d2', foreground='white')
+            style.configure('Blue.TButton', background='#1976d2', foreground='white', padding=(10, 6))
             style.map('Blue.TButton', background=[('active', '#1565c0')])
+
+            # Checkbutton hover/選取樣式
+            style.configure('Hover.TCheckbutton', background='#1565c0', foreground='white')
+            style.map('Hover.TCheckbutton',
+                      background=[('active', '#1565c0'), ('selected', '#1565c0')],
+                      foreground=[('active', 'white'), ('selected', 'white')])
+
+            # Notebook 標籤頁紅底樣式
+            style.configure('Red.TNotebook', background='#ffebee', tabmargins=(4, 2, 4, 0))
+            style.configure('Red.TNotebook.Tab', background='#E53935', foreground='white', padding=(10, 6))
+            style.map('Red.TNotebook.Tab',
+                      background=[('selected', '#B71C1C'), ('active', '#C62828')],
+                      foreground=[('selected', 'white'), ('active', 'white')])
+
+            # 全局 hover 效果：所有 ttk.Button 在滑鼠靠近時變深藍、文字白色，離開還原
+            def apply_hover_effect(widget: tk.Widget) -> None:
+                try:
+                    if isinstance(widget, ttk.Button):
+                        # 保存原始樣式
+                        try:
+                            orig = widget.cget('style')
+                            self._orig_styles[widget] = orig
+                        except Exception:
+                            pass
+                        def on_enter(_e):
+                            try:
+                                widget.configure(style='Blue.TButton')
+                            except Exception:
+                                pass
+                        def on_leave(_e):
+                            try:
+                                orig = self._orig_styles.get(widget) if isinstance(self._orig_styles, dict) else self._orig_styles.get(widget, None)
+                                widget.configure(style=(orig if orig else 'TButton'))
+                            except Exception:
+                                pass
+                        widget.bind('<Enter>', on_enter, add='+')
+                        widget.bind('<Leave>', on_leave, add='+')
+                    elif isinstance(widget, ttk.Checkbutton):
+                        # 保存原始樣式
+                        try:
+                            orig_cb = widget.cget('style')
+                            self._orig_styles[widget] = orig_cb
+                        except Exception:
+                            pass
+                        def on_enter_cb(_e):
+                            try:
+                                widget.configure(style='Hover.TCheckbutton')
+                            except Exception:
+                                pass
+                        def on_leave_cb(_e):
+                            try:
+                                orig = self._orig_styles.get(widget) if isinstance(self._orig_styles, dict) else self._orig_styles.get(widget, None)
+                                widget.configure(style=(orig if orig else 'TCheckbutton'))
+                            except Exception:
+                                pass
+                        widget.bind('<Enter>', on_enter_cb, add='+')
+                        widget.bind('<Leave>', on_leave_cb, add='+')
+                except Exception:
+                    pass
+
+            def walk_and_apply(container: tk.Widget) -> None:
+                try:
+                    for child in container.winfo_children():
+                        apply_hover_effect(child)
+                        walk_and_apply(child)
+                except Exception:
+                    pass
+
+            # 立即套用 hover 綁定，提升感應速度
+            self.root.after(0, lambda: walk_and_apply(self.root))
         except Exception:
             pass
 
@@ -207,7 +283,7 @@ class FourCamDebugTool:
         self.var_clear_output = tk.BooleanVar(value=True)  # 預設打勾
 
         # 左側預設字體（含下拉顯示文字）
-        self.left_font = ('Microsoft JhengHei', 11)
+        self.left_font = ('Microsoft JhengHei', 12)
 
         # 檔案傳輸
         self.var_src_glob = tk.StringVar(value='/mnt/usr/*.jpg')
@@ -329,7 +405,7 @@ class FourCamDebugTool:
         Tooltip(btn_help_global, text='開啟使用說明文件', font_size=16)
         
         # Notebook 分頁容器
-        nb = ttk.Notebook(parent)
+        nb = ttk.Notebook(parent, style='Red.TNotebook')
         nb.pack(fill=tk.BOTH, expand=False)
         tab_cmd = ttk.Frame(nb)
         tab_linux = ttk.Frame(nb)
@@ -423,6 +499,10 @@ class FourCamDebugTool:
         btn_cleanup = ttk.Button(lf_cleanup, text='執行刪除', command=self.on_execute_cleanup, style='Blue.TButton')
         btn_cleanup.grid(row=0, column=2, rowspan=2, sticky=tk.E, padx=(12, 0))
         Tooltip(btn_cleanup, text='依勾選項目執行刪除指令', font_size=16)
+        Tooltip(ck1, text='rm -f /mnt/usr/*.jpg', font_size=16)
+        Tooltip(ck2, text='rm -f /mnt/usr/*.yuv', font_size=16)
+        Tooltip(ck3, text='rm -f /var/vsp/*.jpg', font_size=16)
+        Tooltip(ck4, text='rm -f /var/vsp/*.yuv', font_size=16)
         
         # 檔案傳輸（放入 檔案傳輸 分頁）
         lf_copy = ttk.LabelFrame(tab_copy, text='檔案傳輸（DUT → PC）', padding=8)
