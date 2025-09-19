@@ -197,13 +197,42 @@ class SSHClientManager:
             # 這樣可以載入完整的環境變數和 PATH 設定
             # 轉義單引號以避免指令注入
             escaped_command = command.replace("'", "'\"'\"'")
-            # 先嘗試 bash，如果沒有則使用 sh
-            wrapped_command = f"bash -l -c '{escaped_command}' 2>&1 || sh -l -c '{escaped_command}' 2>&1"
+            # 使用登入殼層（sh -l -c）以載入 /etc/profile 等環境，避免缺少 LD_LIBRARY_PATH 等
+            wrapped_command = f"sh -lc '{escaped_command}' 2>&1"
             
+            # 啟動命令並以硬逾時控制（超時時關閉 channel）
             stdin, stdout, stderr = self._client.exec_command(wrapped_command, timeout=timeout)
-            out = stdout.read().decode('utf-8', errors='ignore')
-            err = stderr.read().decode('utf-8', errors='ignore')
-            exit_code = stdout.channel.recv_exit_status()
+            chan = stdout.channel
+            chan.settimeout(1.0)
+            out_chunks: list[str] = []
+            err_chunks: list[str] = []
+            import time as _t
+            start_ts = _t.time()
+            while True:
+                if timeout is not None and timeout > 0 and (_t.time() - start_ts) > timeout:
+                    try:
+                        chan.close()
+                    except Exception:
+                        pass
+                    return 124, ''.join(out_chunks), '命令逾時已中止'
+                # 讀取可用輸出
+                if chan.recv_ready():
+                    try:
+                        out_chunks.append(stdout.recv(4096).decode('utf-8', errors='ignore'))
+                    except Exception:
+                        pass
+                if chan.recv_stderr_ready():
+                    try:
+                        err_chunks.append(stderr.recv(4096).decode('utf-8', errors='ignore'))
+                    except Exception:
+                        pass
+                if chan.exit_status_ready():
+                    break
+                _t.sleep(0.05)
+
+            exit_code = chan.recv_exit_status()
+            out = ''.join(out_chunks) if out_chunks else stdout.read().decode('utf-8', errors='ignore')
+            err = ''.join(err_chunks) if err_chunks else stderr.read().decode('utf-8', errors='ignore')
             return exit_code, out, err
             
         except Exception as e:

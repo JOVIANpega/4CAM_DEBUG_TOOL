@@ -299,12 +299,10 @@ class SSHWorker(threading.Thread):
                 ts = int(time.time())
                 log_file = f"/tmp/pega_bg_{ts}.log"
                 pid_file = f"/tmp/pega_bg_{ts}.pid"
-                # 以登入 shell 啟動背景程序，輸出重定向至日誌，回傳 PID 標記
+                # 使用登入殼層（sh -l -c）以載入環境變數，背景任務也保持相同行為
                 wrapped_command = (
-                    "bash -l -c "
-                    f"'{{ {escaped_base} >> {log_file} 2>&1 & pid=$!; echo PEGA_BG_STARTED:$pid; echo $pid > {pid_file}; echo PEGA_BG_LOG:{log_file}; }}' 2>&1 "
-                    "|| "
-                    "sh -l -c "
+                    "sh -lc "
+                    +
                     f"'{{ {escaped_base} >> {log_file} 2>&1 & pid=$!; echo PEGA_BG_STARTED:$pid; echo $pid > {pid_file}; echo PEGA_BG_LOG:{log_file}; }}' 2>&1"
                 )
             else:
@@ -312,17 +310,48 @@ class SSHWorker(threading.Thread):
                 # 這樣可以載入完整的環境變數和 PATH 設定
                 # 轉義單引號以避免指令注入
                 escaped_command = command.replace("'", "'\"'\"'")
-                wrapped_command = f"bash -l -c '{escaped_command}' 2>&1 || sh -l -c '{escaped_command}' 2>&1"
+                # 使用登入殼層以載入完整環境（/etc/profile，/etc/shinit 等）
+                wrapped_command = f"sh -lc '{escaped_command}' 2>&1"
             
             log_debug(f"包裝後的指令: {wrapped_command}")
             
             # 執行指令
             stdin, stdout, stderr = self.ssh_client.exec_command(wrapped_command, timeout=self.timeout)
             
-            # 讀取輸出
-            stdout_data = stdout.read().decode("utf-8", errors="ignore")
-            stderr_data = stderr.read().decode("utf-8", errors="ignore")
-            return_code = stdout.channel.recv_exit_status()
+            # 讀取輸出，加入硬逾時保護
+            chan = stdout.channel
+            try:
+                chan.settimeout(1.0)
+            except Exception:
+                pass
+            out_chunks = []
+            err_chunks = []
+            import time as _t
+            start_ts = _t.time()
+            while True:
+                if self.timeout and self.timeout > 0 and (_t.time() - start_ts) > self.timeout:
+                    try:
+                        chan.close()
+                    except Exception:
+                        pass
+                    return 124, ''.join(out_chunks), '命令逾時已中止'
+                if chan.recv_ready():
+                    try:
+                        out_chunks.append(stdout.recv(4096).decode('utf-8', errors='ignore'))
+                    except Exception:
+                        pass
+                if chan.recv_stderr_ready():
+                    try:
+                        err_chunks.append(stderr.recv(4096).decode('utf-8', errors='ignore'))
+                    except Exception:
+                        pass
+                if chan.exit_status_ready():
+                    break
+                _t.sleep(0.05)
+
+            return_code = chan.recv_exit_status()
+            stdout_data = ''.join(out_chunks) if out_chunks else stdout.read().decode('utf-8', errors='ignore')
+            stderr_data = ''.join(err_chunks) if err_chunks else stderr.read().decode('utf-8', errors='ignore')
             
             # 更新持久連線使用時間
             if self.use_persistent:

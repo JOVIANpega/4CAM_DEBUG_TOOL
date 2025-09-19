@@ -1,6 +1,9 @@
 # 常用 LINUX 指令（格式：NAME = COMMAND）
 # 範例：列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/
 
+
+檢查EEP是否有資料= diag -g eep tar 0||ls -la /tmp/tar
+
 列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/
 FIX拍照BUG1=ls -la /var/vsp/*
 FIX拍照BUG2=cp -prf /usr/vsp/* /var/vsp/

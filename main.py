@@ -164,7 +164,9 @@ def _safe_makedirs(path: Path) -> None:
 class FourCamDebugTool:
     def __init__(self) -> None:
         self.root = tk.Tk()
-        self.root.title('4CAM_DEBUG_TOOL v1.0.0')
+        # 應用程式版本（可由設定檔覆蓋）
+        self.var_app_version = tk.StringVar(value='v1.2.0')
+        self.root.title(f'4CAM_DEBUG_TOOL {self.var_app_version.get()}')
         self.root.geometry('900x560')
         self.root.resizable(True, True)
         self.root.minsize(800, 500)
@@ -195,7 +197,7 @@ class FourCamDebugTool:
         # 預設設定
         self.var_dut_ip = tk.StringVar(value='192.168.11.143')
         self.var_pc_ip = tk.StringVar(value='192.168.11.142')
-        self.var_timeout = tk.StringVar(value='15')
+        self.var_timeout = tk.StringVar(value='60')
         self.var_username = tk.StringVar(value='root')
         self.var_password = tk.StringVar(value='')  # 保留但不使用
 
@@ -263,13 +265,26 @@ class FourCamDebugTool:
         self.root.after(200, _apply_saved_sash)
 
     def _build_left(self, parent: ttk.Frame) -> None:
-        # 標題 + 字體 + 清空按鍵
+        # 標題 + 版本 + 字體 + 清空按鍵
         top = ttk.Frame(parent)
         top.pack(fill=tk.X)
         
-        title_label = ttk.Label(top, text='4CAM_DEBUG_TOOL', font=('Microsoft JhengHei', 18, 'bold'))
+        title_label = ttk.Label(top, text='4CAM DEBUG TOOL', font=('Microsoft JhengHei', 22, 'bold'))
         title_label.pack(side=tk.LEFT)
         title_label.configure(background='lightgreen')
+
+        # 版本顯示與可編輯欄位
+        ttk.Label(top, text='版本', font=self.left_font).pack(side=tk.LEFT, padx=(10, 4))
+        ent_version = ttk.Entry(top, textvariable=self.var_app_version, width=10, font=self.left_font)
+        ent_version.pack(side=tk.LEFT)
+        Tooltip(ent_version, text='顯示於視窗標題與左上角的版本字串', font_size=16)
+        # 當版本變更時，同步視窗標題
+        def _on_version_change(*_a):
+            try:
+                self.root.title(f'4CAM_DEBUG_TOOL {self.var_app_version.get()}')
+            except Exception:
+                pass
+        self.var_app_version.trace_add('write', _on_version_change)
         
         btn_clear = ttk.Button(top, text='清空輸出', command=self.on_clear_output, width=10)
         btn_clear.pack(side=tk.RIGHT, padx=(6, 0))
@@ -300,7 +315,7 @@ class FourCamDebugTool:
         btn_test = ttk.Button(btns, text='測試連線', command=self.on_test_connection)
         btn_test.pack(side=tk.LEFT)
         Tooltip(btn_test, text='測試 SSH 連線狀態', font_size=16)
-        btn_reload = ttk.Button(btns, text='重新載入指令', command=self.on_reload_commands)
+        btn_reload = ttk.Button(btns, text='重新載入指令', command=self.on_reload_commands, style='Green.TButton')
         btn_reload.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_reload, text='重新讀取 Command.txt 指令', font_size=16)
 
@@ -584,7 +599,8 @@ class FourCamDebugTool:
                     self.var_pc_ip.set(conn.get('pc_ip', '192.168.11.142'))
                     self.var_username.set(conn.get('username', 'root'))
                     self.var_password.set(conn.get('password', ''))
-                    self.var_timeout.set(str(conn.get('timeout', 15)))
+                    # 將逾時預設提升為 60 秒（若設定檔未提供）
+                    self.var_timeout.set(str(conn.get('timeout', 60)))
                 
                 # 載入檔案設定
                 if 'files' in settings:
@@ -594,6 +610,16 @@ class FourCamDebugTool:
                     self.var_dst_dir.set(files.get('dst_dir', str(Path('D:/VALO360/4CAM'))))
                     # 載入 Linux 指令檔案設定（延遲到 UI 建立後）
                     self._linux_file_setting = files.get('linux_file', str(Path('COMMANDS') / 'linux.txt'))
+                # 載入應用版本
+                if 'app' in settings:
+                    app_cfg = settings['app']
+                    ver = app_cfg.get('version')
+                    if ver:
+                        self.var_app_version.set(str(ver))
+                        try:
+                            self.root.title(f'4CAM_DEBUG_TOOL {self.var_app_version.get()}')
+                        except Exception:
+                            pass
                 
                 # 載入字體設定
                 if 'ui' in settings:
@@ -627,7 +653,7 @@ class FourCamDebugTool:
                     'pc_ip': self.var_pc_ip.get(),
                     'username': self.var_username.get(),
                     'password': self.var_password.get(),
-                    'timeout': int(self.var_timeout.get() or '15')
+                    'timeout': int(self.var_timeout.get() or '60')
                 },
                 'files': {
                     'command_file': self.var_command_file.get(),
@@ -638,6 +664,9 @@ class FourCamDebugTool:
                 'ui': {
                     'font_size': self.font_size,
                     'clear_output': self.var_clear_output.get()
+                },
+                'app': {
+                    'version': self.var_app_version.get()
                 }
             }
             
@@ -732,7 +761,19 @@ class FourCamDebugTool:
             self._append_output(f'無法開啟檔案：{e}', 'error')
 
     def on_reload_commands(self, *_args) -> None:
-        self._load_commands_from(Path(self.var_command_file.get()))
+        # 重新載入 Command.txt 與 Linux 指令檔，無需重啟 GUI
+        try:
+            cmd_path = Path(self.var_command_file.get()) if hasattr(self, 'var_command_file') else Path('COMMANDS') / 'Command.txt'
+            self._load_commands_from(cmd_path)
+        except Exception as e:
+            self._append_output(f'重新載入 Command.txt 失敗：{e}', 'error')
+        try:
+            linux_path = Path(self.var_linux_file.get()) if hasattr(self, 'var_linux_file') else Path('COMMANDS') / 'linux.txt'
+            self._load_linux_commands_from_file(linux_path)
+        except Exception as e:
+            self._append_output(f'重新載入 linux 指令檔失敗：{e}', 'error')
+        else:
+            self._append_output('✅ 已重新載入所有指令來源（Command 與 Linux）', 'success')
 
     def on_command_selected(self, _evt) -> None:
         idx = self.cbo_commands.current()
@@ -1561,60 +1602,114 @@ class FourCamDebugTool:
 
     def _task_exec_command(self, command: str) -> None:
         try:
-            # 顯示送出的指令
-            self._append_output(f'送出指令: {command}', 'info')
-            self._append_output(f'$ {command}')
-            
-            # 確保 SSH 連線正常
-            try:
-                code, out, err = self.ssh.exec_command(command, timeout=30)
-            except Exception as e:
-                if 'SSH 連線已斷開' in str(e):
-                    self._append_output('檢測到 SSH 連線斷開，嘗試重新連線...')
-                    self._ensure_ssh()
-                    code, out, err = self.ssh.exec_command(command, timeout=30)
-                else:
-                    raise e
-            if out:
-                self._append_output(out)
-            if err and 'Warning:' not in err:
-                self._append_output(err)
-            
-            if code == 127:
-                self._append_output(f'[警告] Exit code: {code} - 指令未找到')
-                self._append_output('嘗試使用完整路徑...')
-                # 嘗試常見的 diag 指令路徑
-                if command.startswith('diag'):
-                    alt_commands = [
-                        f'/usr/bin/{command}',
-                        f'/bin/{command}',
-                        f'/sbin/{command}',
-                        f'/usr/sbin/{command}'
-                    ]
-                    for alt_cmd in alt_commands:
-                        self._append_output(f'嘗試: {alt_cmd}')
-                        code2, out2, err2 = self.ssh.exec_command(alt_cmd, timeout=30)
-                        if code2 != 127:
-                            if out2:
-                                self._append_output(out2)
-                            if err2 and 'Warning:' not in err2:
-                                self._append_output(err2)
-                            self._append_output(f'成功！Exit code: {code2}')
-                            break
-                        else:
-                            self._append_output(f'失敗 (Exit code: {code2})')
-                else:
-                    self._append_output(f'Exit code: {code}')
+            # 檢查是否為多指令模式（用 || 分隔）
+            if '||' in command:
+                self._execute_multiple_commands(command)
             else:
-                self._append_output(f'Exit code: {code}')
-            
-            # 顯示指令完畢標記
-            self._append_output('===指令完畢===', 'info')
+                self._execute_single_command(command)
                 
         except Exception as exc:
             self._append_output(f'[錯誤] 執行失敗：{exc}')
             # 即使出錯也顯示指令完畢標記
             self._append_output('===指令完畢===', 'info')
+
+    def _execute_single_command(self, command: str) -> None:
+        """執行單一指令"""
+        # 顯示送出的指令
+        self._append_output(f'送出指令: {command}', 'info')
+        self._append_output(f'$ {command}')
+        
+        # 確保 SSH 連線正常
+        try:
+            # 使用左側設定的逾時（秒）
+            timeout_sec = int(self.var_timeout.get() or '60')
+            code, out, err = self.ssh.exec_command(command, timeout=timeout_sec)
+        except Exception as e:
+            if 'SSH 連線已斷開' in str(e):
+                self._append_output('檢測到 SSH 連線斷開，嘗試重新連線...')
+                self._ensure_ssh()
+                code, out, err = self.ssh.exec_command(command, timeout=timeout_sec)
+            else:
+                raise e
+        if out:
+            self._append_output(out)
+        if err and 'Warning:' not in err:
+            self._append_output(err)
+        
+        if code == 127:
+            self._append_output(f'[警告] Exit code: {code} - 指令未找到')
+            self._append_output('嘗試使用完整路徑...')
+            # 嘗試常見的 diag 指令路徑
+            if command.startswith('diag'):
+                alt_commands = [
+                    f'/usr/bin/{command}',
+                    f'/bin/{command}',
+                    f'/sbin/{command}',
+                    f'/usr/sbin/{command}'
+                ]
+                for alt_cmd in alt_commands:
+                    self._append_output(f'嘗試: {alt_cmd}')
+                    code2, out2, err2 = self.ssh.exec_command(alt_cmd, timeout=timeout_sec)
+                    if code2 != 127:
+                        if out2:
+                            self._append_output(out2)
+                        if err2 and 'Warning:' not in err2:
+                            self._append_output(err2)
+                        self._append_output(f'成功！Exit code: {code2}')
+                        break
+                    else:
+                        self._append_output(f'失敗 (Exit code: {code2})')
+            else:
+                self._append_output(f'Exit code: {code}')
+        else:
+            self._append_output(f'Exit code: {code}')
+        
+        # 顯示指令完畢標記
+        self._append_output('===指令完畢===', 'info')
+
+    def _execute_multiple_commands(self, command: str) -> None:
+        """執行多指令模式（用 || 分隔）"""
+        commands = [cmd.strip() for cmd in command.split('||')]
+        self._append_output(f'送出多指令: {len(commands)} 個指令', 'info')
+        
+        for i, cmd in enumerate(commands, 1):
+            if not cmd:
+                continue
+                
+            # 支援 "名稱 = 指令" 格式：若子指令包含等號，僅取等號右側作為實際命令
+            display_cmd = cmd
+            if '=' in cmd:
+                try:
+                    _, rhs = cmd.split('=', 1)
+                    cmd = rhs.strip()
+                except Exception:
+                    pass
+
+            self._append_output(f'--- 執行第 {i} 個指令 ---', 'info')
+            self._append_output(f'$ {cmd}')
+            
+            try:
+                timeout_sec = int(self.var_timeout.get() or '60')
+                code, out, err = self.ssh.exec_command(cmd, timeout=timeout_sec)
+                
+                if out:
+                    self._append_output(out)
+                if err and 'Warning:' not in err:
+                    self._append_output(err)
+                
+                self._append_output(f'第 {i} 個指令 Exit code: {code}')
+                
+                # 如果指令失敗（非 0），繼續執行下一個
+                if code != 0:
+                    self._append_output(f'第 {i} 個指令失敗，繼續執行下一個...', 'warning')
+                
+            except Exception as e:
+                self._append_output(f'第 {i} 個指令執行錯誤: {e}', 'error')
+                # 即使出錯也繼續執行下一個
+                continue
+        
+        # 顯示所有指令完畢標記
+        self._append_output('===所有指令完畢===', 'info')
 
     def _task_copy_from_dut(self, src_glob: str, dst_dir: str) -> None:
         try:
