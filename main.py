@@ -204,11 +204,11 @@ class FourCamDebugTool:
                       background=[('active', '#1565c0'), ('selected', '#1565c0')],
                       foreground=[('active', 'white'), ('selected', 'white')])
 
-            # Notebook 標籤頁紅底樣式
-            style.configure('Red.TNotebook', background='#ffebee', tabmargins=(4, 2, 4, 0))
-            style.configure('Red.TNotebook.Tab', background='#E53935', foreground='white', padding=(10, 6))
-            style.map('Red.TNotebook.Tab',
-                      background=[('selected', '#B71C1C'), ('active', '#C62828')],
+            # Notebook 標籤頁棕色主題
+            style.configure('Brown.TNotebook', background='#efebe9', tabmargins=(4, 2, 4, 0))  # 淡棕背景
+            style.configure('Brown.TNotebook.Tab', background='#795548', foreground='white', padding=(10, 6))
+            style.map('Brown.TNotebook.Tab',
+                      background=[('selected', '#5D4037'), ('active', '#6D4C41')],
                       foreground=[('selected', 'white'), ('active', 'white')])
 
             # 全局 hover 效果：所有 ttk.Button 在滑鼠靠近時變深藍、文字白色，離開還原
@@ -405,7 +405,7 @@ class FourCamDebugTool:
         Tooltip(btn_help_global, text='開啟使用說明文件', font_size=16)
         
         # Notebook 分頁容器
-        nb = ttk.Notebook(parent, style='Red.TNotebook')
+        nb = ttk.Notebook(parent, style='Brown.TNotebook')
         nb.pack(fill=tk.BOTH, expand=False)
         tab_cmd = ttk.Frame(nb)
         tab_linux = ttk.Frame(nb)
@@ -591,6 +591,12 @@ class FourCamDebugTool:
         
         self.txt_output = ScrolledText(parent, width=50, height=30, font=('Microsoft JhengHei', self.font_size))
         self.txt_output.pack(fill=tk.BOTH, expand=True, pady=(6, 0))
+        # 加粗直向捲動條
+        try:
+            if hasattr(self.txt_output, 'vbar') and self.txt_output.vbar:
+                self.txt_output.vbar.configure(width=18)
+        except Exception:
+            pass
         
         # 設定文字標籤顏色
         self.txt_output.tag_configure("success", foreground="green", font=('Microsoft JhengHei', self.font_size, 'bold'))

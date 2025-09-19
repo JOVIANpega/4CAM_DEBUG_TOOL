@@ -7,6 +7,8 @@ JPG_四個鏡頭都拍照=diag -s snapshot 1 0||diag -s snapshot 1 1||diag -s sn
 HD_YUV_四個鏡頭都拍照=diag -s hdr_snapshot 2 0||diag -s hdr_snapshot 2 1||diag -s hdr_snapshot 2 2||diag -s hdr_snapshot 2 3
 檢查EEP是否有資料= diag -g eep tar 0||ls -la /tmp/tar
 
+check ALL EEP QR資料=diag -g eep qr 0||diag -g eep qr 1|| diag -g eep qr 2||diag -g eep qr 3||diag -g eep lm 0||diag -g eep lm 1||diag -g eep lm 2||diag -g eep lm 3|| diag -g eep sn 0|| diag -g eep sn 1|| diag -g eep sn 2|| diag -g eep sn 3||diag -g eep tar 0
+
 
 
 INITIAL SNAP=diag -s snapshot 1 4
