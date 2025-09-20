@@ -431,7 +431,7 @@ class FourCamDebugTool:
 
         left = ttk.Frame(self._paned, padding=10)
         right = ttk.Frame(self._paned, padding=10)
-        self._paned.add(left, weight=1)
+        self._paned.add(left, weight=2)
         self._paned.add(right, weight=3)
 
         self._build_left(left)
@@ -468,13 +468,26 @@ class FourCamDebugTool:
         canvas.pack(side="left", fill="both", expand=True)
         scrollbar.pack(side="right", fill="y")
         
-        # 保存 scrollable_frame 引用
+        # 保存 canvas 和 scrollable_frame 引用
+        self.left_canvas = canvas
         self.scrollable_frame = scrollable_frame
         
         # 綁定滑鼠滾輪事件
         def _on_mousewheel(event):
             canvas.yview_scroll(int(-1*(event.delta/120)), "units")
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
+        
+        # 添加滾動按鈕（位於滾動條上方）
+        scroll_buttons_frame = ttk.Frame(parent)
+        scroll_buttons_frame.pack(side="right", fill="y", padx=(0, 5))
+        
+        btn_scroll_up = ttk.Button(scroll_buttons_frame, text='↑', width=3, command=self._scroll_left_up)
+        btn_scroll_up.pack(pady=(0, 2))
+        Tooltip(btn_scroll_up, text='向上滾動')
+        
+        btn_scroll_down = ttk.Button(scroll_buttons_frame, text='↓', width=3, command=self._scroll_left_down)
+        btn_scroll_down.pack(pady=(2, 0))
+        Tooltip(btn_scroll_down, text='向下滾動')
         
         # 標題區域（移除版本設定）
         title_frame = ttk.Frame(scrollable_frame)
@@ -1923,6 +1936,22 @@ class FourCamDebugTool:
             self._last_search_index = '1.0'
             if hasattr(self, 'ent_search') and self.ent_search:
                 self.ent_search.delete(0, tk.END)
+        except Exception:
+            pass
+
+    def _scroll_left_up(self) -> None:
+        """左側視窗向上滾動"""
+        try:
+            if hasattr(self, 'left_canvas'):
+                self.left_canvas.yview_scroll(-1, "units")
+        except Exception:
+            pass
+
+    def _scroll_left_down(self) -> None:
+        """左側視窗向下滾動"""
+        try:
+            if hasattr(self, 'left_canvas'):
+                self.left_canvas.yview_scroll(1, "units")
         except Exception:
             pass
 
