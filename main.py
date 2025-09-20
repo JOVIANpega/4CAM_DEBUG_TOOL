@@ -44,12 +44,18 @@ class Tooltip:
         self.min_length = min_length
         self.tooltip_window = None
         self.tooltip_label = None
+        self.auto_hide_timer = None  # 自動隱藏計時器
         self.widget.bind('<Enter>', self.on_enter)
         self.widget.bind('<Leave>', self.on_leave)
         self.widget.bind('<Motion>', self.on_motion)
         
     def on_enter(self, event=None):
         """當滑鼠進入時顯示 tooltip（自動取用當前 widget 顯示文字）。"""
+        # 取消自動隱藏計時器
+        if self.auto_hide_timer:
+            self.widget.after_cancel(self.auto_hide_timer)
+            self.auto_hide_timer = None
+            
         self._refresh_text_from_widget()
         if len(self.text) >= self.min_length:
             self.show_tooltip()
@@ -108,8 +114,16 @@ class Tooltip:
         )
         label.pack(ipadx=6, ipady=4)
         
+        # 設定 3 秒後自動隱藏
+        self.auto_hide_timer = self.widget.after(3000, self.hide_tooltip)
+        
     def hide_tooltip(self):
         """隱藏 tooltip"""
+        # 取消自動隱藏計時器
+        if self.auto_hide_timer:
+            self.widget.after_cancel(self.auto_hide_timer)
+            self.auto_hide_timer = None
+            
         tw = self.tooltip_window
         self.tooltip_window = None
         self.tooltip_label = None
@@ -161,11 +175,26 @@ class Tooltip:
                 value = self.widget.get()
                 if value and value.strip():
                     # 根據 Combobox 的類型顯示不同的提示
-                    widget_name = getattr(self.widget, 'widgetName', '')
                     if 'cbo_commands' in str(self.widget):
                         self.text = f"指令內容: {value}"
                     elif 'cbo_linux' in str(self.widget):
-                        self.text = f"Linux 指令: {value}"
+                        # 根據指令類型顯示不同的提示
+                        try:
+                            # 嘗試取得主視窗的指令類型
+                            main_window = self.widget.winfo_toplevel()
+                            if hasattr(main_window, 'var_linux_type'):
+                                linux_type = main_window.var_linux_type.get()
+                                type_map = {
+                                    'linux': '基礎 Linux 指令',
+                                    'command_simple': '4CAM 專用指令',
+                                    'download': '檔案下載指令'
+                                }
+                                type_name = type_map.get(linux_type, '指令')
+                                self.text = f"{type_name}: {value}"
+                            else:
+                                self.text = f"Linux 指令: {value}"
+                        except:
+                            self.text = f"Linux 指令: {value}"
                     elif 'cbo_common' in str(self.widget):
                         self.text = f"路徑: {value}"
                     else:
@@ -447,30 +476,38 @@ class FourCamDebugTool:
             canvas.yview_scroll(int(-1*(event.delta/120)), "units")
         canvas.bind_all("<MouseWheel>", _on_mousewheel)
         
-        # 標題 + 版本 + 字體 + 清空按鍵
-        top = ttk.Frame(scrollable_frame)
-        top.pack(fill=tk.X)
+        # 標題區域（移除版本設定）
+        title_frame = ttk.Frame(scrollable_frame)
+        title_frame.pack(fill=tk.X, pady=(0, 5))
         
-        self.title_label = ttk.Label(top, text='4CAM DEBUG TOOL', font=('Microsoft JhengHei', 22, 'bold'))
+        self.title_label = ttk.Label(title_frame, text='4CAM DEBUG TOOL', font=('Microsoft JhengHei', 22, 'bold'))
         self.title_label.pack(side=tk.LEFT)
         self.title_label.configure(background='lightgreen')
 
-        # 版本顯示與可編輯欄位
-        ttk.Label(top, text='版本', font=self.left_font).pack(side=tk.LEFT, padx=(10, 4))
-        self.ent_version = ttk.Entry(top, textvariable=self.var_app_version, width=10, font=self.left_font)
-        self.ent_version.pack(side=tk.LEFT)
-        Tooltip(self.ent_version, text='顯示於視窗標題與左上角的版本字串')
-        # 當版本變更時，同步視窗標題
-        def _on_version_change(*_a):
-            try:
-                self.root.title(f'4CAM_DEBUG_TOOL {self.var_app_version.get()}')
-            except Exception:
-                pass
-        self.var_app_version.trace_add('write', _on_version_change)
-        
-        btn_clear = ttk.Button(top, text='清空', command=self.on_clear_output, width=6)
-        btn_clear.pack(side=tk.RIGHT, padx=(6, 0))
+        # 右側：通用按鍵
+        btn_frame = ttk.Frame(title_frame)
+        btn_frame.pack(side=tk.RIGHT)
+
+        btn_help = ttk.Button(btn_frame, text='說明', command=self.on_show_help, style='Green.TButton', width=6)
+        btn_help.pack(side=tk.LEFT, padx=(0, 6))
+        Tooltip(btn_help, text='開啟使用說明文件')
+
+        btn_clear = ttk.Button(btn_frame, text='清空', command=self.on_clear_output, width=6)
+        btn_clear.pack(side=tk.LEFT, padx=(0, 6))
         Tooltip(btn_clear, text='清空右側輸出內容')
+
+        btn_log = ttk.Button(btn_frame, text='存取LOG', command=self.on_save_log_click, width=8)
+        btn_log.pack(side=tk.LEFT)
+        Tooltip(btn_log, text='將右側輸出全部寫入 LOG/時間日期分鐘.log')
+
+        # 工具列
+        toolbar_frame = ttk.Frame(scrollable_frame)
+        toolbar_frame.pack(fill=tk.X, pady=(0, 5))
+
+        # 左側：清空輸出勾選
+        ck_clear = ttk.Checkbutton(toolbar_frame, text='每次下指令清除舊訊息', variable=self.var_clear_output)
+        ck_clear.pack(side=tk.LEFT)
+        Tooltip(ck_clear, text='勾選後每次執行指令前會自動清空右側輸出內容')
         
         # 連線設定（保留在分頁上方）
         lf_conn = ttk.LabelFrame(scrollable_frame, text='連線設定', padding=8)
@@ -494,14 +531,7 @@ class FourCamDebugTool:
         btn_reload.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_reload, text='重新讀取 Command.txt 指令')
 
-        # 全域控制（放置於左側主區塊，連線設定下）
-        global_ctrl = ttk.Frame(scrollable_frame)
-        global_ctrl.pack(fill=tk.X, pady=(4, 4))
-        chk_clear = ttk.Checkbutton(global_ctrl, text='清除舊訊息', variable=self.var_clear_output)
-        chk_clear.pack(side=tk.LEFT)
-        btn_help_global = ttk.Button(global_ctrl, text='說明', command=self.on_show_help, style='Green.TButton', width=6)
-        btn_help_global.pack(side=tk.RIGHT)
-        Tooltip(btn_help_global, text='開啟使用說明文件')
+        # 全域控制已移到頂部工具列
         
         # Notebook 分頁容器
         nb = ttk.Notebook(scrollable_frame, style='Brown.TNotebook')
@@ -545,20 +575,19 @@ class FourCamDebugTool:
         # 清空勾選已移到全域頂部
         
         # LINUX 指令（放入 LINUX 分頁）
-        lf_linux = ttk.LabelFrame(tab_linux, text='常用 Linux 指令', padding=8)
+        lf_linux = ttk.LabelFrame(tab_linux, text='Linux 指令集', padding=8)
         lf_linux.pack(fill=tk.X)
+        
+        # 指令檔案路徑
         linux_file_frame = ttk.Frame(lf_linux)
         linux_file_frame.grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 6))
-        ttk.Label(linux_file_frame, text='Linux 指令檔', font=self.left_font).pack(side=tk.LEFT)
+        ttk.Label(linux_file_frame, text='指令檔案', font=self.left_font).pack(side=tk.LEFT)
         self.var_linux_file = tk.StringVar(value=str(Path('COMMANDS') / 'linux.txt'))
-        self.ent_linux_file = ttk.Entry(linux_file_frame, textvariable=self.var_linux_file, width=35, font=self.left_font)
+        self.ent_linux_file = ttk.Entry(linux_file_frame, textvariable=self.var_linux_file, width=30, font=self.left_font)
         self.ent_linux_file.pack(side=tk.LEFT, padx=(6, 0))
-        btn_pick_linux = ttk.Button(linux_file_frame, text='選擇', command=self.on_pick_linux_file)
-        btn_pick_linux.pack(side=tk.LEFT, padx=(6, 0))
-        btn_open_linux = ttk.Button(linux_file_frame, text='開啟指令檔', command=lambda: self._open_file_path(self.var_linux_file.get()))
+        btn_open_linux = ttk.Button(linux_file_frame, text='開啟指令表', command=lambda: self._open_file_path(self.var_linux_file.get()))
         btn_open_linux.pack(side=tk.LEFT, padx=(6, 0))
-        Tooltip(btn_pick_linux, text='選擇 Linux 指令檔案')
-        Tooltip(btn_open_linux, text='以系統預設程式開啟 Linux 指令檔')
+        Tooltip(btn_open_linux, text='以系統預設程式開啟指令檔')
         
         self.var_linux_choice = tk.StringVar()
         self.cbo_linux = ttk.Combobox(lf_linux, textvariable=self.var_linux_choice, values=[], width=47, state='readonly', font=self.left_font)
@@ -649,8 +678,11 @@ class FourCamDebugTool:
         btns2 = ttk.Frame(lf_copy)
         btns2.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
         # 使用說明已移到全域頂部
+        btn_open_commands = ttk.Button(btns2, text='開啟指令表', command=self.on_open_command_files)
+        btn_open_commands.pack(side=tk.LEFT)
+        Tooltip(btn_open_commands, text='開啟 download.txt 指令檔案')
         btn_copy_all = ttk.Button(btns2, text='將DUT所有資料下載到PC', command=self.on_copy_all_from_dut)
-        btn_copy_all.pack(side=tk.LEFT)
+        btn_copy_all.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_copy_all, text='依常用類型一次下載並自動分類到 JPG/YUV/BIN/CONFIG/LOG')
         btn_copy = ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut, style='Blue.TButton')
         btn_copy.pack(side=tk.LEFT, padx=6)
@@ -663,20 +695,39 @@ class FourCamDebugTool:
             except Exception:
                 pass
 
-        # 左側底部：存取 LOG 按鈕
-        bottom_frame = ttk.Frame(scrollable_frame)
-        bottom_frame.pack(fill=tk.X, pady=(4, 0))
-        btn_save_log = ttk.Button(bottom_frame, text='存取 LOG 資料', command=self.on_save_log_click)
-        btn_save_log.pack(side=tk.LEFT)
-        Tooltip(btn_save_log, text='將右側輸出全部寫入 LOG/時間日期分鐘.log')
+        # 存取LOG按鍵已移到頂部工具列
 
         # 設定分頁內容
-        lf_settings = ttk.LabelFrame(tab_settings, text='字體設定', padding=8)
+        lf_settings = ttk.LabelFrame(tab_settings, text='應用程式設定', padding=8)
         lf_settings.pack(fill=tk.X, pady=(6, 6))
+
+        # 版本設定
+        version_frame = ttk.Frame(lf_settings)
+        version_frame.grid(row=0, column=0, sticky=tk.W, pady=(0, 15))
+        ttk.Label(version_frame, text='應用程式版本', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
+
+        version_controls = ttk.Frame(version_frame)
+        version_controls.grid(row=0, column=1, sticky=tk.W, padx=(10, 0))
+
+        self.ent_version = ttk.Entry(version_controls, textvariable=self.var_app_version, width=15, font=self.left_font)
+        self.ent_version.pack(side=tk.LEFT)
+        Tooltip(self.ent_version, text='顯示於視窗標題與左上角的版本字串')
+
+        # 當版本變更時，同步視窗標題
+        def _on_version_change(*_a):
+            try:
+                self.root.title(f'4CAM_DEBUG_TOOL {self.var_app_version.get()}')
+            except Exception:
+                pass
+        self.var_app_version.trace_add('write', _on_version_change)
+
+        # 字體設定標籤
+        font_label = ttk.Label(lf_settings, text='字體設定', font=('Microsoft JhengHei', 12, 'bold'))
+        font_label.grid(row=1, column=0, sticky=tk.W, pady=(0, 10))
         
         # 左視窗字體設定
         left_font_frame = ttk.Frame(lf_settings)
-        left_font_frame.grid(row=0, column=0, sticky=tk.W, pady=(0, 10))
+        left_font_frame.grid(row=2, column=0, sticky=tk.W, pady=(0, 10))
         ttk.Label(left_font_frame, text='左視窗字體大小', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
         
         left_font_controls = ttk.Frame(left_font_frame)
@@ -689,7 +740,7 @@ class FourCamDebugTool:
         
         # 右視窗字體設定
         right_font_frame = ttk.Frame(lf_settings)
-        right_font_frame.grid(row=1, column=0, sticky=tk.W, pady=(0, 10))
+        right_font_frame.grid(row=3, column=0, sticky=tk.W, pady=(0, 10))
         ttk.Label(right_font_frame, text='右視窗字體大小', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
         
         right_font_controls = ttk.Frame(right_font_frame)
@@ -702,7 +753,7 @@ class FourCamDebugTool:
         
         # POP文字字體設定
         popup_font_frame = ttk.Frame(lf_settings)
-        popup_font_frame.grid(row=2, column=0, sticky=tk.W, pady=(0, 10))
+        popup_font_frame.grid(row=4, column=0, sticky=tk.W, pady=(0, 10))
         ttk.Label(popup_font_frame, text='彈出視窗字體大小', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
         
         popup_font_controls = ttk.Frame(popup_font_frame)
@@ -714,7 +765,7 @@ class FourCamDebugTool:
         
         # 重置按鈕
         reset_frame = ttk.Frame(lf_settings)
-        reset_frame.grid(row=3, column=0, sticky=tk.W, pady=(10, 0))
+        reset_frame.grid(row=5, column=0, sticky=tk.W, pady=(10, 0))
         ttk.Button(reset_frame, text='重置為預設值', command=self.on_reset_fonts, style='Blue.TButton').pack(side=tk.LEFT)
 
     def _build_right(self, parent: ttk.Frame) -> None:
@@ -1020,17 +1071,18 @@ class FourCamDebugTool:
             self.var_command_file.set(file_path)
             self._load_commands_from(Path(file_path))
 
+
     def on_pick_linux_file(self) -> None:
-        """選擇 Linux 指令檔案並立刻更新"""
-        file_path = filedialog.askopenfilename(title='選擇 Linux 指令檔案', filetypes=[('Text', '*.txt'), ('All', '*.*')])
+        """選擇指令檔案並立刻更新"""
+        file_path = filedialog.askopenfilename(title='選擇指令檔案', filetypes=[('Text', '*.txt'), ('All', '*.*')])
         if file_path:
             self.var_linux_file.set(file_path)
-            # 立刻更新 Linux 指令
+            # 立刻更新指令
             self._load_linux_commands_from_file(Path(file_path))
             # 強制更新 UI
             self.root.update_idletasks()
             # 顯示確認訊息
-            self._append_output(f'已選擇 Linux 指令檔案：{file_path}', 'info')
+            self._append_output(f'已選擇指令檔案：{file_path}', 'info')
 
     def on_execute_cleanup(self) -> None:
         """執行 Linux TAB 內勾選的清理刪除指令。"""
@@ -1781,6 +1833,26 @@ class FourCamDebugTool:
             
             # 檢查 DUT 上的檔案並顯示資訊
             self._run_bg(lambda: self._task_check_files_and_show_info(path))
+
+    def on_open_command_files(self) -> None:
+        """開啟 download.txt 指令檔案"""
+        try:
+            file_path = Path('COMMANDS') / 'download.txt'
+            if not file_path.exists():
+                messagebox.showwarning('提醒', 'download.txt 檔案不存在')
+                return
+            
+            # 開啟 download.txt 檔案
+            import subprocess
+            import platform
+            
+            if platform.system() == 'Windows':
+                os.startfile(str(file_path))
+            else:
+                subprocess.run(['xdg-open', str(file_path)])
+                
+        except Exception as e:
+            messagebox.showerror('錯誤', f'開啟檔案時發生錯誤：{e}')
 
     def on_open_destination_folder(self) -> None:
         """開啟目標資料夾（優先開啟 D:\\VALO360 根目錄）。"""

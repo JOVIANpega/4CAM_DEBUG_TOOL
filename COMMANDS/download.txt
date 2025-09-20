@@ -1,0 +1,34 @@
+# 檔案下載相關指令
+# 格式：NAME = COMMAND
+
+# === 檔案列表檢查 ===
+列出VSP照片 = ls -la /var/vsp/*.jpg
+列出USR照片 = ls -la /mnt/usr/*.jpg
+列出影片檔案 = ls -la /var/vsp/*.mp4
+列出YUV檔案 = ls -la /var/vsp/*.yuv
+列出所有媒體檔案 = ls -la /var/vsp/*.{jpg,yuv,mp4}
+列出USR媒體檔案 = ls -la /mnt/usr/*.{jpg,yuv}
+
+# === 檔案搜尋 ===
+搜尋所有JPG檔案 = find /var/vsp /mnt/usr -name "*.jpg" -type f
+搜尋所有YUV檔案 = find /var/vsp /mnt/usr -name "*.yuv" -type f
+搜尋所有MP4檔案 = find /var/vsp /mnt/usr -name "*.mp4" -type f
+搜尋所有媒體檔案 = find /var/vsp /mnt/usr \( -name "*.jpg" -o -name "*.yuv" -o -name "*.mp4" \) -type f
+
+# === 檔案大小檢查 ===
+檢查VSP目錄大小 = du -sh /var/vsp/
+檢查USR目錄大小 = du -sh /mnt/usr/
+檢查媒體檔案總大小 = find /var/vsp /mnt/usr \( -name "*.jpg" -o -name "*.yuv" -o -name "*.mp4" \) -type f -exec du -ch {} + | tail -1
+
+# === 檔案計數 ===
+計算JPG檔案數量 = find /var/vsp /mnt/usr -name "*.jpg" -type f | wc -l
+計算YUV檔案數量 = find /var/vsp /mnt/usr -name "*.yuv" -type f | wc -l
+計算MP4檔案數量 = find /var/vsp /mnt/usr -name "*.mp4" -type f | wc -l
+計算所有媒體檔案數量 = find /var/vsp /mnt/usr \( -name "*.jpg" -o -name "*.yuv" -o -name "*.mp4" \) -type f | wc -l
+
+# === 檔案時間檢查 ===
+檢查最新檔案 = find /var/vsp /mnt/usr \( -name "*.jpg" -o -name "*.yuv" -o -name "*.mp4" \) -type f -printf '%T@ %Tc %p\n' | sort -n | tail -10
+檢查最舊檔案 = find /var/vsp /mnt/usr \( -name "*.jpg" -o -name "*.yuv" -o -name "*.mp4" \) -type f -printf '%T@ %Tc %p\n' | sort -n | head -10
+
+# === 準備下載清單 ===
+產生下載清單 = find /var/vsp /mnt/usr \( -name "*.jpg" -o -name "*.yuv" -o -name "*.mp4" \) -type f -printf '%p\n' > /tmp/download_list.txt && cat /tmp/download_list.txt

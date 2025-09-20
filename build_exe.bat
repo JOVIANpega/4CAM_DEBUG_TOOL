@@ -1,184 +1,133 @@
 @echo off
-chcp 65001 >nul
 echo ========================================
-echo 4CAM_DEBUG_TOOL EXE 打包工具
+echo 4CAM DEBUG TOOL EXE Builder
 echo ========================================
 echo.
 
-REM 檢查 Python 環境
+REM Check Python
 python --version >nul 2>&1
 if errorlevel 1 (
-    echo 錯誤：找不到 Python，請確認 Python 已安裝並加入 PATH
+    echo Error: Python not found
     pause
     exit /b 1
 )
 
-REM 檢查 PyInstaller
+REM Check PyInstaller
 python -c "import PyInstaller" >nul 2>&1
 if errorlevel 1 (
-    echo 正在安裝 PyInstaller...
+    echo Installing PyInstaller...
     pip install pyinstaller
     if errorlevel 1 (
-        echo 錯誤：PyInstaller 安裝失敗
+        echo Error: PyInstaller install failed
         pause
         exit /b 1
     )
 )
 
-REM 檢查並創建圖示檔案
-if not exist "assets\icon.ico" (
-    echo 未找到圖示檔案，正在創建...
-    python create_icon.py
-    if errorlevel 1 (
-        echo 警告：圖示創建失敗，將使用預設圖示
-    )
-)
-
-REM 清理舊的建置檔案
-echo 清理舊的建置檔案...
+REM Clean old files
+echo Cleaning old build files...
 if exist "build" rmdir /s /q "build"
 if exist "dist" rmdir /s /q "dist"
 if exist "__pycache__" rmdir /s /q "__pycache__"
 
-REM 設定版本號與產生版本資訊檔（改用 Python 腳本以避免轉義問題）
-echo 產生版本資訊資源...
+REM Create version info
+echo Creating version info...
 python create_version_info.py
 if errorlevel 1 (
-    echo 錯誤：version_info.txt 產生失敗
+    echo Error: version_info.txt creation failed
     pause
     exit /b 1
 )
 
+REM Set version
 for /f "usebackq delims=" %%v in (`type version_info.txt ^| findstr /i "FileVersion"`) do set VERSION=%%v
-rem VERSION 行格式如：StringStruct('FileVersion', 'v1.2.3'), 取其中的版本字串
 for /f "tokens=2 delims='" %%a in ("%VERSION%") do set VERSION=%%a
-if "%VERSION%"=="" set VERSION=v1.2.0
+if "%VERSION%"=="" set VERSION=v1.9.1
 set EXE_NAME=4CAM_DEBUG_TOOL_%VERSION%
 
 echo.
-echo 開始打包 %EXE_NAME%.exe...
+echo Building %EXE_NAME%.exe...
 echo.
 
-REM 確保 COMMANDS\linux.txt 存在（UTF-8）
-if not exist "COMMANDS" (
-    mkdir "COMMANDS"
-)
+REM Create COMMANDS directory if needed
+if not exist "COMMANDS" mkdir "COMMANDS"
 if not exist "COMMANDS\linux.txt" (
-    echo 產生預設 COMMANDS\linux.txt ...
-    powershell -NoProfile -Command ^
-        "$lines = @(
-        '# 常用 LINUX 指令（格式：NAME = COMMAND）',
-        '# 範例：列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/',
-        '',
-        '列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/',
-        '刪除 /mnt/usr/ JPG 檔 = rm -f /mnt/usr/*.jpg',
-        '刪除 /mnt/usr/ YUV 檔 = rm -f /mnt/usr/*.yuv',
-        '刪除 /var/vsp/ JPG 檔 = rm -f /var/vsp/*.jpg',
-        '刪除 /var/vsp/ YUV 檔 = rm -f /var/vsp/*.yuv',
-        '顯示系統資訊 = uname -a',
-        '顯示磁碟使用量 = df -h',
-        '顯示記憶體使用量 = free -h',
-        '顯示目前目錄詳細檔案 = ls -la',
-        '列出根目錄檔案 = ls -la /',
-        '列出臨時目錄檔案 = ls -la /tmp',
-        '列出使用者目錄檔案 = ls -la /mnt/usr',
-        '網路連線 = netstat -an',
-        '網路介面 = ifconfig',
-        '路由表 = route -n',
-        '核心版本 = cat /proc/version',
-        'CPU 資訊 = cat /proc/cpuinfo',
-        '記憶體資訊 = cat /proc/meminfo',
-        '系統運行時間 = uptime',
-        '系統時間 = date',
-        '硬體時鐘 = hwclock',
-        '掛載點 = mount',
-        '已載入模組 = lsmod',
-        'USB 設備 = lsusb',
-        'PCI 設備 = lspci',
-        'I2C 匯流排 0 = i2cdetect -y 0',
-        'I2C 匯流排 1 = i2cdetect -y 1',
-        '最近核心訊息 = dmesg | tail -20',
-        '錯誤訊息過濾 = dmesg | grep -i error',
-        '攝影機訊息過濾 = dmesg | grep -i camera',
-        'VSP 目錄 = ls -la /var/vsp',
-        'TMP TAR 目錄 = ls -la /tmp/tar',
-        '檢查錄影程序 = ps aux | grep hd_video',
-        '檢查診斷程序 = ps aux | grep diag',
-        '停止錄影程序 = killall hd_video_record_with_vsp_4dev_smart2_pega_dre',
-        '檢查 /tmp 空間 = df -h /tmp',
-        '檢查 /var/vsp 空間 = df -h /var/vsp',
-        '檢查 /mnt/usr 空間 = df -h /mnt/usr',
-        '系統負載 = cat /proc/loadavg'
-        );
-        [IO.File]::WriteAllLines('COMMANDS/linux.txt', $lines, (New-Object System.Text.UTF8Encoding($false)))"
+    echo Creating default linux.txt...
+    echo # Linux Commands > "COMMANDS\linux.txt"
+    echo List /mnt/usr/ files = ls -la /mnt/usr/ >> "COMMANDS\linux.txt"
+    echo Delete JPG files = rm -f /mnt/usr/*.jpg >> "COMMANDS\linux.txt"
+    echo Delete YUV files = rm -f /mnt/usr/*.yuv >> "COMMANDS\linux.txt"
+    echo System info = uname -a >> "COMMANDS\linux.txt"
+    echo Disk usage = df -h >> "COMMANDS\linux.txt"
+    echo Memory usage = free -h >> "COMMANDS\linux.txt"
 )
 
-REM 檢查是否有圖示檔案
+REM Build EXE
 if exist "assets\icon.ico" (
-    echo 使用自訂圖示打包...
+    echo Building with custom icon...
     pyinstaller --onefile --noconsole --icon=assets/icon.ico --version-file version_info.txt --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
 ) else (
-    echo 未找到圖示檔案，使用預設圖示打包...
+    echo Building without icon...
     pyinstaller --onefile --noconsole --version-file version_info.txt --add-data "COMMANDS;COMMANDS" --add-data "REF;REF" --add-data "settings.json;." --name=%EXE_NAME% main.py
 )
 
 if errorlevel 1 (
     echo.
-    echo 錯誤：打包失敗！
+    echo Error: Build failed!
     pause
     exit /b 1
 )
 
-REM 檢查 EXE 是否成功生成
+REM Check if EXE was created
 if exist "dist\%EXE_NAME%.exe" (
     echo.
     echo ========================================
-    echo 打包成功！
-    echo 檔案位置：dist\%EXE_NAME%.exe
+    echo Build successful!
+    echo File location: dist\%EXE_NAME%.exe
     echo ========================================
     echo.
     
-    REM 複製資源目錄到 dist（強制同步最新檔案）
-    echo 複製資源目錄到 dist...
+    REM Copy resource directories
+    echo Copying resource directories...
     if exist "COMMANDS" (
         if exist "dist\COMMANDS" rmdir /s /q "dist\COMMANDS"
         xcopy "COMMANDS" "dist\COMMANDS" /E /I /Q /Y
-        echo - COMMANDS 目錄已同步
+        echo - COMMANDS directory copied
     )
     if exist "REF" (
         xcopy "REF" "dist\REF" /E /I /Q
-        echo - REF 目錄已複製
+        echo - REF directory copied
     )
     if exist "assets" (
         xcopy "assets" "dist\assets" /E /I /Q
-        echo - assets 目錄已複製
+        echo - assets directory copied
     )
 
-    REM 複製設定檔 settings.json 至 dist（若存在）
+    REM Copy settings.json
     if exist "settings.json" (
         copy /Y "settings.json" "dist\settings.json" >nul
-        echo - settings.json 已複製
+        echo - settings.json copied
     )
     
-    REM 顯示檔案資訊
+    REM Show file info
     echo.
-    echo 檔案資訊：
+    echo File information:
     dir "dist\%EXE_NAME%.exe"
     echo.
     
-    REM 顯示 dist 目錄內容
-    echo dist 目錄內容：
+    REM Show dist directory contents
+    echo dist directory contents:
     dir "dist" /B
     echo.
     
-    REM 詢問是否開啟資料夾
-    set /p choice="是否開啟 dist 資料夾？(Y/N): "
+    REM Ask to open folder
+    set /p choice="Open dist folder? (Y/N): "
     if /i "%choice%"=="Y" (
         explorer "dist"
     )
 ) else (
     echo.
-    echo 錯誤：EXE 檔案未成功生成！
+    echo Error: EXE file not created!
 )
 
 echo.

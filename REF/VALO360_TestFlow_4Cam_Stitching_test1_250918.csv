@@ -1,0 +1,1007 @@
+Index_16,Phase,Title,Marco,Instrument,Switch,Send,Reply,EndPrompt,Ref,Validation,Prompt,Waiting,ExecMode,Description,TestID,
+0,0,"0,START",,,,":Utility.Ping,""*$(DUT_IP)"",""30000"",""*$(PCIP_1)"",""30000""",0,,,,,,0,pingcheck,IOLE015,
+1,,,,,,":Disconnect,""LAN""",0,,,,,,0,LAN disconnection,FWCS002,
+2,,,,,,":Delay,""500""",0,,,,,,0,Delay,SCSC001,
+3,,,,,,":Connect,""LAN""",0,,,,,,0,LAN connection,FWCS002,
+4,,,,,,":Delay,""500""",0,,,,,,0,Delay,SCSC001,
+5,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+6,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+7,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+8,,,,,,":Disconnect,""UART""",0,,,,,,0,UART disconnection,OTFX082,
+9,,,,,,":Delay,""500""",0,,,,,,0,Delay,SCSC001,
+10,,,,,,":Connect,""UART""",0,,,,,,0,UART connection,OTFX082,
+11,,,,,,":Delay,""500""",0,,,,,,0,Delay,SCSC001,
+12,,,,,,LAN@diag -g sn dev\r\n,@root,,"$ISN:WithinString,""dev sn"",""\n"":Trim:rpString,"" "",""""","(ISN,%len,11,11);",,5000,"4:15,14",GET Custom_SN,CACK182,
+13,,,,,,LAN@diag -g eep sn 0\r\n,@cam0 SN,,"$ISN:maString,""cam0 SN = "":mbString,""\r\nroot"";","(ISN,%len,10,10);",,5000,"4:19,19",get cam0 eeprom,B7PL011,
+14,,,,,,LAN@diag -g sn mb\r\n,@root,,"$60ISN:WithinString,""mb sn"",""\n"":Trim:rpString,"" "",""""","(60ISN,%len,13,13);",,5000,1,GET MB SN,CACK176,
+15,,,,,,LAN@diag -g sku\r\n,@root,,"$gModel:WithinString,""sku"",""\n"":Trim:rpString,"" "",""""","(gModel,%len,8,9);",,5000,1,GET Model Name,CACK182,
+16,,,,,,":SetModelName,""*(gModel)""",@*(gModel),,,,,,1,Set Iplus modename,WFOT015,
+17,,,,,,:GetModelName,@*(gModel),,,,,,1,Get Iplus modename,WFOT015,
+18,,,,,,":ShowISN,""*(ISN)""",0,,,,,,0,PC#-#Show SN to UI,B7PL025,
+19,,,,,,:SfCheckRoute,0,,,,,,8,PC#-#Check Route@#$,B7PL025,
+20,,,,,,":Utility.GenDT,""yyyyMMdd_HH_mm_ss""",0,,$time,,,,1,TRY_TEXT,IOCD041,
+21,,,,,,LAN@pegacmd version\r\n,@,,,,,,0,check pega version,B7PL011,
+22,,,,,,LAN@diag -g eep qr 0\r\n,@cam0,,,,,,0,get cam0 eeprom,B7PL011,
+23,,,,,,LAN@diag -g eep qr 1\r\n,@cam1,,,,,,0,get cam1 eeprom,B7PL011,
+24,,,,,,LAN@diag -g eep qr 2\r\n,@cam2,,,,,,0,get cam2 eeprom,B7PL011,
+25,,,,,,LAN@diag -g eep qr 3\r\n,@cam3,,,,,,0,get cam3 eeprom,B7PL011,
+26,,,,,,LAN@diag -g eep lm 0\r\n,@cam0,,,,,,0,get cam0 eeprom,B7PL011,
+27,,,,,,LAN@diag -g eep lm 1\r\n,@cam1,,,,,,0,get cam1 eeprom,B7PL011,
+28,,,,,,LAN@diag -g eep lm 2\r\n,@cam2,,,,,,0,get cam2 eeprom,B7PL011,
+29,,,,,,LAN@diag -g eep lm 3\r\n,@cam3,,,,,,0,get cam3 eeprom,B7PL011,
+30,,,,,,LAN@diag -g eep sn 0\r\n,@cam0,,,,,,0,get cam0 eeprom,B7PL011,
+31,,,,,,LAN@diag -g eep sn 1\r\n,@cam1,,,,,,0,get cam1 eeprom,B7PL011,
+32,,,,,,LAN@diag -g eep sn 2\r\n,@cam2,,,,,,0,get cam2 eeprom,B7PL011,
+33,,,,,,LAN@diag -g eep sn 3\r\n,@cam3,,,,,,0,get cam3 eeprom,B7PL011,
+34,,,,,,LAN@diag -g temp s0\r\n,@s0,,"temp0:maString,""s0\r\n"":mbString,""\r\nroot"";","(temp0,%d,-999,999);",,5000,0,read temp 0,B7PL011,
+35,,,,,,LAN@diag -g temp s1\r\n,@s1,,"temp1:maString,""s1\r\n"":mbString,""\r\nroot"";","(temp1,%d,-999,999);",,5000,0,read temp 1,B7PL011,
+36,,,,,,LAN@diag -g temp s2\r\n,@s2,,"temp2:maString,""s2\r\n"":mbString,""\r\nroot"";","(temp2,%d,-999,999);",,5000,0,read temp 2,B7PL011,
+37,,,,,,LAN@diag -g temp s3\r\n,@s3,,"temp3:maString,""s3\r\n"":mbString,""\r\nroot"";","(temp3,%d,-999,999);",,5000,0,read temp 3,B7PL011,
+38,,,,,,LAN@diag -s ircut on\r\n,@set ircut on done,,,,,,0,set ircut on,B7PL011,
+39,,,,,,LAN@echo 0 > /sys/block/mmcblk2boot1/force_ro\r\n,@,,,,,,1,TRY_TEXT,IMU0019,
+40,,,,,,"LAN@mount -o remount,rw -t ext4 /dev/mmcblk2boot1 /mnt/mf\r\n",@,,,,,,1,TRY_TEXT,IMU0019,
+41,,,,,,LAN@mount\r\n,"@/mnt/mf type ext4 (rw,relatime)",,,,,,"4:45,42",TRY_TEXT,IMU0019,
+42,,,,,,LAN@shutdown.sh\r\n,@,,,,,,1,TRY_TEXT,IMU0019,
+43,,,,,,LAN@reboot\r\n,@,,,,,,1,TRY_TEXT,IMU0019,
+44,,,,,,":Utility.Ping,""*$(DUT_IP)"",""10000"",""*$(PCIP_1)"",""60000""",0,,,,,,1,pingcheck,IOLE015,
+45,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+46,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+47,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+48,,,,,,UART@Y+004.000\r\n,@Y,,,,,,0,UART move to OP,OTFX082,
+49,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+50,,,,,,UART@R-323.000\r\n,@R,,,,,,0,UART rotate to OP,OTFX082,
+51,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+52,1,create dir,,,,CmdConsole@cd Station_Record\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+53,,,,,,CmdConsole@mkdir *(ISN)+*(time)\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+54,,,,,,CmdConsole@cd *(ISN)+*(time)\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+55,,,,,,CmdConsole@mkdir new_cal 2DLUT stitch_ecs_rgb_data Overlapslicer_output PatternChecker_output 4cam\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+56,,,,,,CmdConsole@cd Overlapslicer_output\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+57,,,,,,CmdConsole@mkdir d1_cam01 d1_cam12 d1_cam23 d1_cam30 d2_cam01 d2_cam12 d2_cam23 d2_cam30\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+58,,,,,,CmdConsole@cd ..\PatternChecker_output\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+59,,,,,,CmdConsole@mkdir d1_cam01 d1_cam12 d1_cam23 d1_cam30 d2_cam01 d2_cam12 d2_cam23 d2_cam30\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+60,,,,,,CmdConsole@cd ..\4cam\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+61,,,,,,CmdConsole@mkdir 1m_stitch_area_01 1m_stitch_area_12 1m_stitch_area_23 1m_stitch_area_30 1.5m_stitch_area_01 1.5m_stitch_area_12 1.5m_stitch_area_23 1.5m_stitch_area_30\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+62,,,,,,CmdConsole@cd 1m_stitch_area_01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+63,,,,,,CmdConsole@mkdir dre_off dre_on\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+64,,,,,,CmdConsole@cd ..\1m_stitch_area_12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+65,,,,,,CmdConsole@mkdir dre_off dre_on\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+66,,,,,,CmdConsole@cd ..\1m_stitch_area_23\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+67,,,,,,CmdConsole@mkdir dre_off dre_on\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+68,,,,,,CmdConsole@cd ..\1m_stitch_area_30\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+69,,,,,,CmdConsole@mkdir dre_off dre_on\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+70,2,get eep,,,,LAN@cd /tmp\r\n,@,,,,,,1,TRY_TEXT,B7PL011,0
+71,,,,,,LAN@diag -g eep tar 0\r\n,@PASS,,,,,,0,get calibration data from eeprom,B7PL011,
+72,,,,,,LAN@cd /tmp/tar\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+73,,,,,,LAN@tar zxvf new_and_ecs.tar.gz\r\n,@\r\nnew,,,,,,0,unzip calibration data,B7PL011,
+74,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+75,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+76,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+77,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+78,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+79,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+80,,,,,,LAN@tftp -pl new_cal_data_0.yml *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy new_cal_data_0 to PC,IPIO023,
+81,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+82,,,,,,LAN@tftp -pl new_cal_data_1.yml *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy new_cal_data_1 to PC,IPIO023,
+83,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+84,,,,,,LAN@tftp -pl new_cal_data_2.yml *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy new_cal_data_2 to PC,IPIO023,
+85,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+86,,,,,,LAN@tftp -pl new_cal_data_3.yml *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy new_cal_data_3 to PC,IPIO023,
+87,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+88,,,,,,"CmdConsole@copy ""tftp_data\\new_cal_data_0.yml"" ""Station_Record\*(ISN)+*(time)\\new_cal""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+89,,,,,,"CmdConsole@copy ""tftp_data\\new_cal_data_1.yml"" ""Station_Record\*(ISN)+*(time)\\new_cal""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+90,,,,,,"CmdConsole@copy ""tftp_data\\new_cal_data_2.yml"" ""Station_Record\*(ISN)+*(time)\\new_cal""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+91,,,,,,"CmdConsole@copy ""tftp_data\\new_cal_data_3.yml"" ""Station_Record\*(ISN)+*(time)\\new_cal""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+92,,,,,,CmdConsole@move tftp_data\\new_cal_data_0.yml Tool\Stitching_2DLUT_Gen_Tool\input\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+93,,,,,,CmdConsole@move tftp_data\\new_cal_data_1.yml Tool\Stitching_2DLUT_Gen_Tool\input\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+94,,,,,,CmdConsole@move tftp_data\\new_cal_data_2.yml Tool\Stitching_2DLUT_Gen_Tool\input\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+95,,,,,,CmdConsole@move tftp_data\\new_cal_data_3.yml Tool\Stitching_2DLUT_Gen_Tool\input\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+96,3,write stitch_ecs to vsp,,,,LAN@mv stitch_ecs_rgb_data0.bin /var/vsp\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+97,,,,,,LAN@mv stitch_ecs_rgb_data1.bin /var/vsp\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+98,,,,,,LAN@mv stitch_ecs_rgb_data2.bin /var/vsp\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+99,,,,,,LAN@mv stitch_ecs_rgb_data3.bin /var/vsp\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+100,,,,,,LAN@cd /var/vsp\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+101,,,,,,LAN@tftp -pl stitch_ecs_rgb_data0.bin *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy ecs_0 to PC,IPIO023,
+102,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+103,,,,,,LAN@tftp -pl stitch_ecs_rgb_data1.bin *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy ecs_1 to PC,IPIO023,
+104,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+105,,,,,,LAN@tftp -pl stitch_ecs_rgb_data2.bin *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy ecs_2 to PC,IPIO023,
+106,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+107,,,,,,LAN@tftp -pl stitch_ecs_rgb_data3.bin *$(PCIP_1) -b 50000\r\n,@100%,,,,,10000,0,copy ecs_3 to PC,IPIO023,
+108,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+109,,,,,,CmdConsole@move tftp_data\stitch_ecs_rgb_data0.bin Station_Record\*(ISN)+*(time)\stitch_ecs_rgb_data\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+110,,,,,,CmdConsole@move tftp_data\stitch_ecs_rgb_data1.bin Station_Record\*(ISN)+*(time)\stitch_ecs_rgb_data\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+111,,,,,,CmdConsole@move tftp_data\stitch_ecs_rgb_data2.bin Station_Record\*(ISN)+*(time)\stitch_ecs_rgb_data\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+112,,,,,,CmdConsole@move tftp_data\stitch_ecs_rgb_data3.bin Station_Record\*(ISN)+*(time)\stitch_ecs_rgb_data\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+113,4,get 2DLUT and write to vsp,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+114,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+115,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+116,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+117,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+118,,,,,,LAN@cd /var/vsp\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+119,,,,,,CmdConsole@Stitching2DLUTGenTool.exe ..\\input\\1m_StitchingSetting.yml ..\\output\r\n,@Stitching Done,,,,,120000,0,generate 1m_2dlut,IOCD041,
+120,,,,,,"CmdConsole@copy ""..\output\cam1_LUT257_ROT90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\1m_cam0_LUT257_ROT90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+121,,,,,,"CmdConsole@copy ""..\output\cam2_LUT257_ROT-90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\1m_cam1_LUT257_ROT-90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+122,,,,,,"CmdConsole@copy ""..\output\cam3_LUT257_ROT90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\1m_cam2_LUT257_ROT90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+123,,,,,,"CmdConsole@copy ""..\output\cam4_LUT257_ROT-90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\1m_cam3_LUT257_ROT-90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+124,,,,,,"CmdConsole@copy ""..\output\camview_anchors.txt"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\1m_camview_anchors.txt""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+125,,,,,,CmdConsole@move ..\output\cam1_LUT257_ROT90_hflip0.bin ..\..\..\\tftp_data\1m_cam0_LUT257_ROT90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+126,,,,,,CmdConsole@move ..\output\cam2_LUT257_ROT-90_hflip0.bin ..\..\..\\tftp_data\1m_cam1_LUT257_ROT-90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+127,,,,,,CmdConsole@move ..\output\cam3_LUT257_ROT90_hflip0.bin ..\..\..\\tftp_data\1m_cam2_LUT257_ROT90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+128,,,,,,CmdConsole@move ..\output\cam4_LUT257_ROT-90_hflip0.bin ..\..\..\\tftp_data\1m_cam3_LUT257_ROT-90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+129,,,,,,CmdConsole@move ..\output\camview_anchors.txt ..\..\..\\tftp_data\1m_camview_anchors.txt\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+130,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+131,,,,,,LAN@tftp -gr 1m_cam0_LUT257_ROT90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 1m_2dlut to vsp,IPIO023,
+132,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+133,,,,,,LAN@tftp -gr 1m_cam1_LUT257_ROT-90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 1m_2dlut to vsp,IPIO023,
+134,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+135,,,,,,LAN@tftp -gr 1m_cam2_LUT257_ROT90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 1m_2dlut to vsp,IPIO023,
+136,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+137,,,,,,LAN@tftp -gr 1m_cam3_LUT257_ROT-90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 1m_2dlut to vsp,IPIO023,
+138,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+139,,,,,,LAN@tftp -gr 1m_camview_anchors.txt *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 1m_2dlut to vsp,IPIO023,
+140,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+141,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+142,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+143,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+144,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+145,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+146,,,,,,CmdConsole@Stitching2DLUTGenTool.exe ..\\input\\3m_StitchingSetting.yml ..\\output\r\n,@Stitching Done,,,,,120000,0,generate 3m_2dlut,IOCD041,
+147,,,,,,"CmdConsole@copy ""..\output\cam1_LUT257_ROT90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\3m_cam0_LUT257_ROT90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+148,,,,,,"CmdConsole@copy ""..\output\cam2_LUT257_ROT-90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\3m_cam1_LUT257_ROT-90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+149,,,,,,"CmdConsole@copy ""..\output\cam3_LUT257_ROT90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\3m_cam2_LUT257_ROT90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+150,,,,,,"CmdConsole@copy ""..\output\cam4_LUT257_ROT-90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\3m_cam3_LUT257_ROT-90_hflip0.bin""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+151,,,,,,"CmdConsole@copy ""..\output\camview_anchors.txt"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\3m_camview_anchors.txt""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+152,,,,,,CmdConsole@move ..\output\cam1_LUT257_ROT90_hflip0.bin ..\..\..\\tftp_data\3m_cam0_LUT257_ROT90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+153,,,,,,CmdConsole@move ..\output\cam2_LUT257_ROT-90_hflip0.bin ..\..\..\\tftp_data\3m_cam1_LUT257_ROT-90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+154,,,,,,CmdConsole@move ..\output\cam3_LUT257_ROT90_hflip0.bin ..\..\..\\tftp_data\3m_cam2_LUT257_ROT90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+155,,,,,,CmdConsole@move ..\output\cam4_LUT257_ROT-90_hflip0.bin ..\..\..\\tftp_data\3m_cam3_LUT257_ROT-90_hflip0.bin\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+156,,,,,,CmdConsole@move ..\output\camview_anchors.txt ..\..\..\\tftp_data\3m_camview_anchors.txt\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+157,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+158,,,,,,LAN@tftp -gr 3m_cam0_LUT257_ROT90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 3m_2dlut to vsp,IPIO023,
+159,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+160,,,,,,LAN@tftp -gr 3m_cam1_LUT257_ROT-90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 3m_2dlut to vsp,IPIO023,
+161,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+162,,,,,,LAN@tftp -gr 3m_cam2_LUT257_ROT90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 3m_2dlut to vsp,IPIO023,
+163,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+164,,,,,,LAN@tftp -gr 3m_cam3_LUT257_ROT-90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 3m_2dlut to vsp,IPIO023,
+165,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+166,,,,,,LAN@tftp -gr 3m_camview_anchors.txt *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 3m_2dlut to vsp,IPIO023,
+167,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+168,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+169,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+170,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+171,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+172,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+173,,,,,,CmdConsole@Stitching2DLUTGenTool.exe ..\\input\\5m_StitchingSetting.yml ..\\output\r\n,@Stitching Done,,,,,120000,0,generate 5m_2dlut,IOCD041,
+174,,,,,,"CmdConsole@copy ""..\output\cam1_LUT257_ROT90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\5m_cam0_LUT257_ROT90_hflip0.bin""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+175,,,,,,"CmdConsole@copy ""..\output\cam2_LUT257_ROT-90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\5m_cam1_LUT257_ROT-90_hflip0.bin""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+176,,,,,,"CmdConsole@copy ""..\output\cam3_LUT257_ROT90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\5m_cam2_LUT257_ROT90_hflip0.bin""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+177,,,,,,"CmdConsole@copy ""..\output\cam4_LUT257_ROT-90_hflip0.bin"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\5m_cam3_LUT257_ROT-90_hflip0.bin""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+178,,,,,,"CmdConsole@copy ""..\output\camview_anchors.txt"" ""..\..\..\Station_Record\*(ISN)+*(time)\2DLUT\5m_camview_anchors.txt""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+179,,,,,,CmdConsole@move ..\output\cam1_LUT257_ROT90_hflip0.bin ..\..\..\\tftp_data\5m_cam0_LUT257_ROT90_hflip0.bin\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+180,,,,,,CmdConsole@move ..\output\cam2_LUT257_ROT-90_hflip0.bin ..\..\..\\tftp_data\5m_cam1_LUT257_ROT-90_hflip0.bin\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+181,,,,,,CmdConsole@move ..\output\cam3_LUT257_ROT90_hflip0.bin ..\..\..\\tftp_data\5m_cam2_LUT257_ROT90_hflip0.bin\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+182,,,,,,CmdConsole@move ..\output\cam4_LUT257_ROT-90_hflip0.bin ..\..\..\\tftp_data\5m_cam3_LUT257_ROT-90_hflip0.bin\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+183,,,,,,CmdConsole@move ..\output\camview_anchors.txt ..\..\..\\tftp_data\5m_camview_anchors.txt\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+184,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+185,,,,,,LAN@tftp -gr 5m_cam0_LUT257_ROT90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 5m_2dlut to vsp,IPIO023,
+186,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+187,,,,,,LAN@tftp -gr 5m_cam1_LUT257_ROT-90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 5m_2dlut to vsp,IPIO023,
+188,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+189,,,,,,LAN@tftp -gr 5m_cam2_LUT257_ROT90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 5m_2dlut to vsp,IPIO023,
+190,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+191,,,,,,LAN@tftp -gr 5m_cam3_LUT257_ROT-90_hflip0.bin *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 5m_2dlut to vsp,IPIO023,
+192,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+193,,,,,,LAN@tftp -gr 5m_camview_anchors.txt *$(PCIP_1)\r\n,@100%,,,,,10000,0,copy 5m_2dlut to vsp,IPIO023,
+194,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+195,5,DRE streaming and 2DLUT finetuned,,,,UART@Y+555.000\r\n,@Y,,,,,,0,UART move to 1m,OTFX082,1
+196,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,2
+197,,,,,,LAN@hd_video_record_with_vsp_4dev_smart2_pega_dre 30 3 1 0 0\r\n,@exit !!,,,,,30000,1,TRY_TEXT,B7PL011,0
+198,,,,,,LAN@1\r\n,@Enable vsp mode,,,,,,1,TRY_TEXT,B7PL011,0
+199,,,,,,UART@R-278.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart(fatp),OTFX082,3
+200,,,,,,":Delay,""20000""",0,,,,,,0,PC#-#Delay,IOET160,2
+201,,,,,,LAN@l\r\n,@finetune,,,,,,1,TRY_TEXT,B7PL011,0
+202,,,,,,LAN@0\r\n,@1m_cam1_LUT257_ROT-90_hflip0.bin generated,,,,,,1,TRY_TEXT,B7PL011,0
+203,,,,,,UART@R-188.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart(fatp),OTFX082,3
+204,,,,,,":Delay,""20000""",0,,,,,,0,PC#-#Delay,IOET160,2
+205,,,,,,LAN@l\r\n,@finetune,,,,,,1,TRY_TEXT,B7PL011,0
+206,,,,,,LAN@1\r\n,@1m_cam2_LUT257_ROT90_hflip0.bin generated,,,,,,1,TRY_TEXT,B7PL011,0
+207,,,,,,UART@R-098.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart(fatp),OTFX082,3
+208,,,,,,":Delay,""20000""",0,,,,,,0,PC#-#Delay,IOET160,2
+209,,,,,,LAN@l\r\n,@finetune,,,,,,1,TRY_TEXT,B7PL011,0
+210,,,,,,LAN@2\r\n,@1m_cam3_LUT257_ROT-90_hflip0.bin generated,,,,,,1,TRY_TEXT,B7PL011,0
+211,,,,,,UART@R-008.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart(fatp),OTFX082,3
+212,,,,,,":Delay,""20000""",0,,,,,,0,PC#-#Delay,IOET160,2
+213,,,,,,LAN@l\r\n,@finetune,,,,,,1,TRY_TEXT,B7PL011,0
+214,,,,,,LAN@3\r\n,@1m_cam0_LUT257_ROT90_hflip0.bin generated,,,,,,1,TRY_TEXT,B7PL011,0
+215,,,,,,LAN@q\r\n,@\r\nroot,,,,,20000,1,TRY_TEXT,B7PL011,0
+216,,,,,,LAN@diag -s snapshot 1 4\r\n,@main close fail=-30,,,,,30000,0,cam0 snapshot,B7PL011,
+217,,,,,,LAN@rm /mnt/usr/dump_4cam_bs_snap0.jpg\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+218,6,distance1 cam01,,,,LAN@cd /mnt/usr\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+219,,,,,,UART@Y+555.000\r\n,@Y,,,,,,0,UART move to 1m,OTFX082,
+220,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+221,,,,,,UART@R-278.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart,OTFX082,
+222,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+223,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+224,,,,,,LAN@diag -s hdr_snapshot 2 0 1\r\n,@main close fail=-30,,,,,30000,0,cam0 snapshot,B7PL011,
+225,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+226,,,,,,LAN@diag -s hdr_snapshot 2 1 1\r\n,@main close fail=-30,,,,,30000,0,cam1 snapshot,B7PL011,
+227,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+228,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+229,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+230,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+231,,,,,,CmdConsole@\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+232,,,,,,CmdConsole@\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+233,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+234,,"0,Overlap Slicer",,,,LAN@tftp -pl dump_cam0_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam0 yuv to PC,IPIO023,
+235,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+236,,,,,,LAN@tftp -pl dump_cam1_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam1 yuv to PC,IPIO023,
+237,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+238,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam0-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+239,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam1-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+240,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam0-a1x.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+241,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam1-a1x.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+242,,,,,,CmdConsole@del Tool\LutSimulator\input\\new_cal_data_0.png Tool\LutSimulator\input\\new_cal_data_1.png Tool\LutSimulator\input\\new_cal_data_2.png Tool\LutSimulator\input\\new_cal_data_3.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+243,,,,,,":Delay,""1000""",@,,,,,,0,PC#-#Delay,IOET160,
+244,,,,,,CmdConsole@move .\\tftp_data\\dump_cam0_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam0-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+245,,,,,,CmdConsole@move .\\tftp_data\\dump_cam1_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam1-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+246,,,,,,CmdConsole@cd .\\Tool\LutSimulator\input\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+247,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam0-a1.yuv cam0-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+248,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+249,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam1-a1.yuv cam1-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam1 yuv to png,IOCD041,
+250,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+251,,,,,,CmdConsole@ffmpeg -i cam0-a1x.png -vf transpose=2 new_cal_data_0.png 2>&1\r\n,@speed,,,,,10000,0,cam0 png rotate,IOCD041,
+252,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+253,,,,,,CmdConsole@ffmpeg -i cam1-a1x.png -vf transpose=1 new_cal_data_1.png 2>&1\r\n,@speed,,,,,10000,0,cam1 png rotate,IOCD041,
+254,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+255,,,,,,CmdConsole@del cam0-a1.yuv cam1-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+256,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+257,,,,,,CmdConsole@del cam0-a1x.png cam1-a1x.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+258,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+259,,,,,,"CmdConsole@copy ""..\green_temp\temp1.png"" "".\\new_cal_data_2.png""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+260,,,,,,"CmdConsole@copy ""..\green_temp\temp2.png"" "".\\new_cal_data_3.png""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+261,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+262,,,,,,CmdConsole@cd ..\exe\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+263,,,,,,CmdConsole@LutSimulator.exe ..\input\b.json\r\n,@ProcTime,,,,,20000,0,execute LUTsimulator,IOCD041,
+264,,,,,,CmdConsole@cd ..\..\overlapSlicer_1_0_1\exe\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+265,,,,,,CmdConsole@OverlapSlicer.exe ..\..\..\\tftp_data\1m_camview_anchors.txt ..\..\LutSimulator\output ..\output 1 2>&1\r\n,@img id: 3\r\n,,,,,20000,0,execute Overlapslicer,IOCD041,
+266,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+267,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+268,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+269,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+270,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+271,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+272,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+273,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+274,,,,,,CmdConsole@xcopy ..\..\Stitching_2DLUT_Gen_Tool\exe\CheckStitched.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+275,,,,,,CmdConsole@cd ..\..\PatternChecker_nocuda_v1.0.1\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+276,,,,,,CmdConsole@PatternCheck.exe CIRCULAR ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_0_L_Overlap.png ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_1_R_Overlap.png  output  input\key.json 3\r\n,@Corresponding Points error,,,,,40000,0,execute patternchecker,WUCA002,
+277,,,,,,CmdConsole@move output\output_left.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+278,,,,,,CmdConsole@move output\output_right.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+279,,,,,,CmdConsole@move output\circular_point_left.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+280,,,,,,CmdConsole@move output\circular_point_right.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+281,,,,,,CmdConsole@move output\score.txt ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam01\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+282,,,,,,CmdConsole@..\print_txt\print_txt.exe ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam01\score.txt\r\n,@Bottom Y Max error,,"P75 Y error:maString,""P75 Y error\: "":mbString,""\r\nMax Y error"";
+Top Y P75 error:maString,""Top Y P75 error\: "":mbString,""\r\nTop Y Max error"";
+Center Y P75 error:maString,""Center Y P75 error\: "":mbString,""\r\nCenter Y Max error"";
+Bottom Y P75 error:maString,""Bottom Y P75 error\: "":mbString,""\r\nBottom Y Max error"";","(P75 Y error,%f,-50,50);
+(Top Y P75 error,%f,-50,50);
+(Center Y P75 error,%f,-50,50);
+(Bottom Y P75 error,%f,-50,50);",,,0,check pattern error,WUCA002,
+283,,,,,,CmdConsole@cd ..\LutSimulator\input\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+284,,"0,PatternChecker",,,,CmdConsole@del cam0-a1.yuv cam1-a1.yuv cam2-a1.yuv cam3-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+285,,,,,,CmdConsole@del new_cal_data_0x.png new_cal_data_1x.png new_cal_data_2x.png new_cal_data_3x.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+286,,,,,,CmdConsole@del new_cal_data_0.png new_cal_data_1.png new_cal_data_2.png new_cal_data_3.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+287,,,,,,CmdConsole@cd ..\output\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+288,,,,,,CmdConsole@del Global_Block_0.png Global_Block_1.png Global_Block_2.png Global_Block_3.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+289,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+290,,,,,,LAN@diag -s hdr_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+291,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+292,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_0.yuv,,,,,,1,TRY_TEXT,B7PL011,
+293,,,,,,LAN@diag -s hdr_dre_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+294,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+295,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_dre_0.yuv,,,,,,1,TRY_TEXT,B7PL011,
+296,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+297,,"0,4cam test",,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+298,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+299,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+300,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+301,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+302,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+303,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_dre_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+304,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+305,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_01\dre_off\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+306,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_dre_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_01\dre_on\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+307,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+308,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_01\dre_off\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+309,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_0.yuv 4cam_cam01_dre_off.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+310,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+311,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+312,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+313,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+314,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_01\dre_on\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+315,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_01\dre_on\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+316,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_dre_0.yuv 4cam_cam01_dre_on.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+317,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+318,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+319,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+320,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+321,,,,,,CmdConsole@\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+322,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_01\dre_off/\r\n,@blue_discontinue_2_END,,"$dre_off_cam01_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_off_cam01_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_off_cam01_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_off_cam01_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_off_cam01_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_off_cam01_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_off_cam01_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_off_cam01_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_off_cam01_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_off_cam01_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_off_cam01_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_off_cam01_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_off_cam01_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_off_cam01_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_off_cam01_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_off_cam01_MAX_PixelsShift_0,%f,-999,999);
+(dre_off_cam01_MAX_PixelsShift_1,%f,-999,999);
+(dre_off_cam01_MAX_PixelsShift_2,%f,-999,999);
+(dre_off_cam01_Brightness_discontinue_0,%f,-999,999);
+(dre_off_cam01_red_discontinue_0,%f,-999,999);
+(dre_off_cam01_green_discontinue_0,%f,-999,999);
+(dre_off_cam01_blue_discontinue_0,%f,-999,999);
+(dre_off_cam01_Brightness_discontinue_1,%f,-999,999);
+(dre_off_cam01_red_discontinue_1,%f,-999,999);
+(dre_off_cam01_green_discontinue_1,%f,-999,999);
+(dre_off_cam01_blue_discontinue_1,%f,-999,999);
+(dre_off_cam01_Brightness_discontinue_2,%f,-999,999);
+(dre_off_cam01_red_discontinue_2,%f,-999,999);
+(dre_off_cam01_green_discontinue_2,%f,-999,999);
+(dre_off_cam01_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+323,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_01\dre_on/\r\n,@blue_discontinue_2_END,,"$dre_on_cam01_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_on_cam01_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_on_cam01_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_on_cam01_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_on_cam01_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_on_cam01_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_on_cam01_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_on_cam01_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_on_cam01_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_on_cam01_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_on_cam01_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_on_cam01_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_on_cam01_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_on_cam01_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_on_cam01_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_on_cam01_MAX_PixelsShift_0,%f,-999,999);
+(dre_on_cam01_MAX_PixelsShift_1,%f,-999,999);
+(dre_on_cam01_MAX_PixelsShift_2,%f,-999,999);
+(dre_on_cam01_Brightness_discontinue_0,%f,-999,999);
+(dre_on_cam01_red_discontinue_0,%f,-999,999);
+(dre_on_cam01_green_discontinue_0,%f,-999,999);
+(dre_on_cam01_blue_discontinue_0,%f,-999,999);
+(dre_on_cam01_Brightness_discontinue_1,%f,-999,999);
+(dre_on_cam01_red_discontinue_1,%f,-999,999);
+(dre_on_cam01_green_discontinue_1,%f,-999,999);
+(dre_on_cam01_blue_discontinue_1,%f,-999,999);
+(dre_on_cam01_Brightness_discontinue_2,%f,-999,999);
+(dre_on_cam01_red_discontinue_2,%f,-999,999);
+(dre_on_cam01_green_discontinue_2,%f,-999,999);
+(dre_on_cam01_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+324,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+325,7,"0,distance1 cam12",,,,LAN@cd /mnt/usr\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+326,,,,,,UART@Y+555.000\r\n,@Y,,,,,,0,UART move to 1m,OTFX082,
+327,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+328,,,,,,UART@R-188.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart,OTFX082,
+329,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+330,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv\r\n,@,,,,,,1,TRY_TEXT,B7PL011,
+331,,"0,Overlap Slicer",,,,LAN@diag -s hdr_snapshot 2 1 1\r\n,@main close fail=-30,,,,,30000,0,cam0 snapshot,B7PL011,
+332,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+333,,,,,,LAN@diag -s hdr_snapshot 2 2 1\r\n,@main close fail=-30,,,,,30000,0,cam1 snapshot,B7PL011,
+334,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+335,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+336,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+337,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+338,,,,,,CmdConsole@\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+339,,,,,,CmdConsole@\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+340,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+341,,,,,,LAN@tftp -pl dump_cam1_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam0 yuv to PC,IPIO023,
+342,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+343,,,,,,LAN@tftp -pl dump_cam2_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam1 yuv to PC,IPIO023,
+344,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+345,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam1-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+346,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam2-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+347,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam1-a1x.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+348,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam2-a1x.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+349,,,,,,CmdConsole@del Tool\LutSimulator\input\\new_cal_data_0.png Tool\LutSimulator\input\\new_cal_data_1.png Tool\LutSimulator\input\\new_cal_data_2.png Tool\LutSimulator\input\\new_cal_data_3.png\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+350,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+351,,,,,,CmdConsole@move .\\tftp_data\\dump_cam1_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam1-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+352,,,,,,CmdConsole@move .\\tftp_data\\dump_cam2_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam2-a1.yuv\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+353,,,,,,CmdConsole@cd Tool\LutSimulator\input\r\n,,,,,,,1,TRY_TEXT,IOCD041,
+354,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam1-a1.yuv cam1-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+355,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+356,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam2-a1.yuv cam2-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam1 yuv to png,IOCD041,
+357,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+358,,,,,,CmdConsole@ffmpeg -i cam1-a1x.png -vf transpose=1 new_cal_data_1.png 2>&1\r\n,@speed,,,,,10000,0,cam0 png rotate,IOCD041,
+359,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+360,,,,,,CmdConsole@ffmpeg -i cam2-a1x.png -vf transpose=2 new_cal_data_2.png 2>&1\r\n,@speed,,,,,10000,0,cam1 png rotate,IOCD041,
+361,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+362,,,,,,CmdConsole@del cam1-a1.yuv cam2-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+363,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+364,,,,,,CmdConsole@del cam1-a1x.png cam2-a1x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+365,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+366,,,,,,"CmdConsole@copy ""..\green_temp\temp1.png"" "".\\new_cal_data_0.png""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+367,,,,,,"CmdConsole@copy ""..\green_temp\temp2.png"" "".\\new_cal_data_3.png""\r\n",@,,,,,,1,TRY_TEXT,IOCD041,
+368,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+369,,,,,,CmdConsole@cd ..\exe\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+370,,,,,,CmdConsole@LutSimulator.exe ..\input\b.json\r\n,@ProcTime,,,,,20000,0,execute LUTsimulator,IOCD041,
+371,,,,,,CmdConsole@cd ..\..\overlapSlicer_1_0_1\exe\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+372,,,,,,CmdConsole@OverlapSlicer.exe ..\..\..\\tftp_data\1m_camview_anchors.txt ..\..\LutSimulator\output ..\output 1 2>&1\r\n,@img id: 3\r\n,,,,,20000,0,execute Overlapslicer,IOCD041,
+373,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+374,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+375,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+376,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+377,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+378,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+379,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+380,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+381,,,,,,CmdConsole@xcopy ..\..\Stitching_2DLUT_Gen_Tool\exe\CheckStitched.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam12\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+382,,,,,,CmdConsole@cd ..\..\PatternChecker_nocuda_v1.0.1\r\n,@,,,,,,1,TRY_TEXT,IOCD041,
+383,,"0,PatternChecker",,,,CmdConsole@PatternCheck.exe CIRCULAR ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_1_L_Overlap.png ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_2_R_Overlap.png  output  input\key.json 3\r\n,@Corresponding Points error,,,,,40000,0,execute patternchecker,WUCA002,
+384,,,,,,CmdConsole@move output\output_left.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam12\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+385,,,,,,CmdConsole@move output\output_right.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam12\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+386,,,,,,CmdConsole@move output\circular_point_left.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam12\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+387,,,,,,CmdConsole@move output\circular_point_right.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam12\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+388,,,,,,CmdConsole@move output\score.txt ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam12\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+389,,,,,,CmdConsole@..\print_txt\print_txt.exe ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam12\score.txt\r\n,@Bottom Y Max error,,"P75 Y error:maString,""P75 Y error\: "":mbString,""\r\nMax Y error"";
+Top Y P75 error:maString,""Top Y P75 error\: "":mbString,""\r\nTop Y Max error"";
+Center Y P75 error:maString,""Center Y P75 error\: "":mbString,""\r\nCenter Y Max error"";
+Bottom Y P75 error:maString,""Bottom Y P75 error\: "":mbString,""\r\nBottom Y Max error"";","(P75 Y error,%f,-50,50);
+(Top Y P75 error,%f,-50,50);
+(Center Y P75 error,%f,-50,50);
+(Bottom Y P75 error,%f,-50,50);",,,0,check pattern error,WUCA002,
+390,,,,,,CmdConsole@cd ..\LutSimulator\input\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+391,,,,,,CmdConsole@del cam0-a1.yuv cam1-a1.yuv cam2-a1.yuv cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+392,,,,,,CmdConsole@del new_cal_data_0x.png new_cal_data_1x.png new_cal_data_2x.png new_cal_data_3x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+393,,,,,,CmdConsole@del new_cal_data_0.png new_cal_data_1.png new_cal_data_2.png new_cal_data_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+394,,,,,,CmdConsole@cd ..\output\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+395,,,,,,CmdConsole@del Global_Block_0.png Global_Block_1.png Global_Block_2.png Global_Block_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+396,,"0,4cam test",,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+397,,,,,,LAN@diag -s hdr_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+398,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+399,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_0.yuv,,,,,,0,TRY_TEXT,B7PL011,
+400,,,,,,LAN@diag -s hdr_dre_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+401,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+402,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_dre_0.yuv,,,,,,0,TRY_TEXT,B7PL011,
+403,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+404,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+405,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+406,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+407,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+408,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+409,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+410,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_dre_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+411,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+412,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_12\dre_off\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+413,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_dre_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_12\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+414,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+415,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_12\dre_off\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+416,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_0.yuv 4cam_cam12_dre_off.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+417,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+418,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+419,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+420,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+421,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_12\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+422,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_12\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+423,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_dre_0.yuv 4cam_cam12_dre_on.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+424,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+425,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+426,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+427,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+428,,,,,,CmdConsole@\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+429,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_12\dre_off/\r\n,@blue_discontinue_2_END,,"$dre_off_cam12_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_off_cam12_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_off_cam12_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_off_cam12_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_off_cam12_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_off_cam12_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_off_cam12_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_off_cam12_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_off_cam12_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_off_cam12_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_off_cam12_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_off_cam12_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_off_cam12_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_off_cam12_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_off_cam12_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_off_cam12_MAX_PixelsShift_0,%f,-999,999);
+(dre_off_cam12_MAX_PixelsShift_1,%f,-999,999);
+(dre_off_cam12_MAX_PixelsShift_2,%f,-999,999);
+(dre_off_cam12_Brightness_discontinue_0,%f,-999,999);
+(dre_off_cam12_red_discontinue_0,%f,-999,999);
+(dre_off_cam12_green_discontinue_0,%f,-999,999);
+(dre_off_cam12_blue_discontinue_0,%f,-999,999);
+(dre_off_cam12_Brightness_discontinue_1,%f,-999,999);
+(dre_off_cam12_red_discontinue_1,%f,-999,999);
+(dre_off_cam12_green_discontinue_1,%f,-999,999);
+(dre_off_cam12_blue_discontinue_1,%f,-999,999);
+(dre_off_cam12_Brightness_discontinue_2,%f,-999,999);
+(dre_off_cam12_red_discontinue_2,%f,-999,999);
+(dre_off_cam12_green_discontinue_2,%f,-999,999);
+(dre_off_cam12_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+430,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_12\dre_on/\r\n,@blue_discontinue_2_END,,"$dre_on_cam12_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_on_cam12_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_on_cam12_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_on_cam12_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_on_cam12_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_on_cam12_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_on_cam12_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_on_cam12_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_on_cam12_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_on_cam12_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_on_cam12_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_on_cam12_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_on_cam12_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_on_cam12_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_on_cam12_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_on_cam12_MAX_PixelsShift_0,%f,-999,999);
+(dre_on_cam12_MAX_PixelsShift_1,%f,-999,999);
+(dre_on_cam12_MAX_PixelsShift_2,%f,-999,999);
+(dre_on_cam12_Brightness_discontinue_0,%f,-999,999);
+(dre_on_cam12_red_discontinue_0,%f,-999,999);
+(dre_on_cam12_green_discontinue_0,%f,-999,999);
+(dre_on_cam12_blue_discontinue_0,%f,-999,999);
+(dre_on_cam12_Brightness_discontinue_1,%f,-999,999);
+(dre_on_cam12_red_discontinue_1,%f,-999,999);
+(dre_on_cam12_green_discontinue_1,%f,-999,999);
+(dre_on_cam12_blue_discontinue_1,%f,-999,999);
+(dre_on_cam12_Brightness_discontinue_2,%f,-999,999);
+(dre_on_cam12_red_discontinue_2,%f,-999,999);
+(dre_on_cam12_green_discontinue_2,%f,-999,999);
+(dre_on_cam12_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+431,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+432,8,"0,distance1 cam23",,,,LAN@cd /mnt/usr\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+433,,,,,,UART@Y+555.000\r\n,@Y,,,,,,0,UART move to 1m,OTFX082,
+434,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+435,,,,,,UART@R-098.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart,OTFX082,
+436,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+437,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+438,,"0,Overlap Slicer",,,,LAN@diag -s hdr_snapshot 2 2 1\r\n,@main close fail=-30,,,,,30000,0,cam0 snapshot,B7PL011,
+439,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+440,,,,,,LAN@diag -s hdr_snapshot 2 3 1\r\n,@main close fail=-30,,,,,30000,0,cam1 snapshot,B7PL011,
+441,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+442,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+443,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+444,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+445,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+446,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+447,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+448,,,,,,LAN@tftp -pl dump_cam2_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam0 yuv to PC,IPIO023,
+449,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+450,,,,,,LAN@tftp -pl dump_cam3_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam1 yuv to PC,IPIO023,
+451,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+452,,,,,,CmdConsole@del .\\Tool\\LuTSimulaTor\\inpuT\\cam2-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+453,,,,,,CmdConsole@del .\\Tool\\LuTSimulaTor\\inpuT\\cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+454,,,,,,CmdConsole@del .\\Tool\\LuTSimulaTor\\inpuT\\cam2-a1x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+455,,,,,,CmdConsole@del .\\Tool\\LuTSimulaTor\\inpuT\\cam3-a1x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+456,,,,,,CmdConsole@del Tool\LutSimulator\input\\new_cal_data_0.png Tool\LutSimulator\input\\new_cal_data_1.png Tool\LutSimulator\input\\new_cal_data_2.png Tool\LutSimulator\input\\new_cal_data_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+457,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+458,,,,,,CmdConsole@move .\\tftp_data\\dump_cam2_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam2-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+459,,,,,,CmdConsole@move .\\tftp_data\\dump_cam3_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+460,,,,,,CmdConsole@cd Tool\LutSimulator\input\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+461,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam2-a1.yuv cam2-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+462,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+463,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam3-a1.yuv cam3-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam1 yuv to png,IOCD041,
+464,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+465,,,,,,CmdConsole@ffmpeg -i cam2-a1x.png -vf transpose=2 new_cal_data_2.png 2>&1\r\n,@speed,,,,,10000,0,cam0 png rotate,IOCD041,
+466,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+467,,,,,,CmdConsole@ffmpeg -i cam3-a1x.png -vf transpose=1 new_cal_data_3.png 2>&1\r\n,@speed,,,,,10000,0,cam1 png rotate,IOCD041,
+468,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+469,,,,,,CmdConsole@del cam2-a1.yuv cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+470,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+471,,,,,,CmdConsole@del cam2-a1x.png cam3-a1x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+472,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+473,,,,,,"CmdConsole@copy ""..\green_temp\temp1.png"" "".\\new_cal_data_0.png""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+474,,,,,,"CmdConsole@copy ""..\green_temp\temp2.png"" "".\\new_cal_data_1.png""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+475,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+476,,,,,,CmdConsole@cd ..\exe\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+477,,,,,,CmdConsole@LutSimulator.exe ..\input\b.json\r\n,@ProcTime,,,,,20000,0,execute LUTsimulator,IOCD041,
+478,,,,,,CmdConsole@cd ..\..\overlapSlicer_1_0_1\exe\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+479,,,,,,CmdConsole@OverlapSlicer.exe ..\..\..\\tftp_data\1m_camview_anchors.txt ..\..\LutSimulator\output ..\output 1 2>&1\r\n,@img id: 3\r\n,,,,,20000,0,execute Overlapslicer,IOCD041,
+480,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+481,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+482,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+483,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+484,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+485,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+486,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+487,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+488,,,,,,CmdConsole@xcopy ..\..\Stitching_2DLUT_Gen_Tool\exe\CheckStitched.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+489,,,,,,CmdConsole@cd ..\..\PatternChecker_nocuda_v1.0.1\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+490,,"0,PatternChecker",,,,CmdConsole@PatternCheck.exe CIRCULAR ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_2_L_Overlap.png ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_3_R_Overlap.png  output  input\key.json 3\r\n,@Corresponding Points error,,,,,40000,0,execute patternchecker,WUCA002,
+491,,,,,,CmdConsole@move output\output_left.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+492,,,,,,CmdConsole@move output\output_right.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+493,,,,,,CmdConsole@move output\circular_point_left.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+494,,,,,,CmdConsole@move output\circular_point_right.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+495,,,,,,CmdConsole@move output\score.txt ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam23\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+496,,,,,,CmdConsole@..\print_txt\print_txt.exe ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam23\score.txt\r\n,@Bottom Y Max error,,"P75 Y error:maString,""P75 Y error\: "":mbString,""\r\nMax Y error"";
+Top Y P75 error:maString,""Top Y P75 error\: "":mbString,""\r\nTop Y Max error"";
+Center Y P75 error:maString,""Center Y P75 error\: "":mbString,""\r\nCenter Y Max error"";
+Bottom Y P75 error:maString,""Bottom Y P75 error\: "":mbString,""\r\nBottom Y Max error"";","(P75 Y error,%f,-50,50);
+(Top Y P75 error,%f,-50,50);
+(Center Y P75 error,%f,-50,50);
+(Bottom Y P75 error,%f,-50,50);",,,0,check pattern error,WUCA002,
+497,,,,,,CmdConsole@cd ..\LutSimulator\input\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+498,,,,,,CmdConsole@del cam0-a1.yuv cam1-a1.yuv cam2-a1.yuv cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+499,,,,,,CmdConsole@del new_cal_data_0x.png new_cal_data_1x.png new_cal_data_2x.png new_cal_data_3x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+500,,,,,,CmdConsole@del new_cal_data_0.png new_cal_data_1.png new_cal_data_2.png new_cal_data_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+501,,,,,,CmdConsole@cd ..\output\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+502,,,,,,CmdConsole@del Global_Block_0.png Global_Block_1.png Global_Block_2.png Global_Block_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+503,,"0,4cam test",,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+504,,,,,,LAN@diag -s hdr_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+505,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+506,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_0.yuv,,,,,,0,TRY_TEXT,B7PL011,
+507,,,,,,LAN@diag -s hdr_dre_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+508,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+509,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_dre_0.yuv,,,,,,0,TRY_TEXT,B7PL011,
+510,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+511,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+512,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+513,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+514,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+515,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+516,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+517,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_dre_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+518,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+519,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_23\dre_off\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+520,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_dre_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_23\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+521,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+522,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_23\dre_off\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+523,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_0.yuv 4cam_cam23_dre_off.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+524,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+525,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+526,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+527,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+528,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_23\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+529,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_23\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+530,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_dre_0.yuv 4cam_cam23_dre_on.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+531,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+532,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+533,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+534,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+535,,,,,,CmdConsole@\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+536,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_23\dre_off/\r\n,@blue_discontinue_2_END,,"$dre_off_cam23_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_off_cam23_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_off_cam23_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_off_cam23_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_off_cam23_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_off_cam23_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_off_cam23_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_off_cam23_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_off_cam23_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_off_cam23_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_off_cam23_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_off_cam23_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_off_cam23_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_off_cam23_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_off_cam23_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_off_cam23_MAX_PixelsShift_0,%f,-999,999);
+(dre_off_cam23_MAX_PixelsShift_1,%f,-999,999);
+(dre_off_cam23_MAX_PixelsShift_2,%f,-999,999);
+(dre_off_cam23_Brightness_discontinue_0,%f,-999,999);
+(dre_off_cam23_red_discontinue_0,%f,-999,999);
+(dre_off_cam23_green_discontinue_0,%f,-999,999);
+(dre_off_cam23_blue_discontinue_0,%f,-999,999);
+(dre_off_cam23_Brightness_discontinue_1,%f,-999,999);
+(dre_off_cam23_red_discontinue_1,%f,-999,999);
+(dre_off_cam23_green_discontinue_1,%f,-999,999);
+(dre_off_cam23_blue_discontinue_1,%f,-999,999);
+(dre_off_cam23_Brightness_discontinue_2,%f,-999,999);
+(dre_off_cam23_red_discontinue_2,%f,-999,999);
+(dre_off_cam23_green_discontinue_2,%f,-999,999);
+(dre_off_cam23_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+537,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_23\dre_on/\r\n,@blue_discontinue_2_END,,"$dre_on_cam23_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_on_cam23_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_on_cam23_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_on_cam23_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_on_cam23_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_on_cam23_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_on_cam23_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_on_cam23_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_on_cam23_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_on_cam23_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_on_cam23_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_on_cam23_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_on_cam23_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_on_cam23_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_on_cam23_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_on_cam23_MAX_PixelsShift_0,%f,-999,999);
+(dre_on_cam23_MAX_PixelsShift_1,%f,-999,999);
+(dre_on_cam23_MAX_PixelsShift_2,%f,-999,999);
+(dre_on_cam23_Brightness_discontinue_0,%f,-999,999);
+(dre_on_cam23_red_discontinue_0,%f,-999,999);
+(dre_on_cam23_green_discontinue_0,%f,-999,999);
+(dre_on_cam23_blue_discontinue_0,%f,-999,999);
+(dre_on_cam23_Brightness_discontinue_1,%f,-999,999);
+(dre_on_cam23_red_discontinue_1,%f,-999,999);
+(dre_on_cam23_green_discontinue_1,%f,-999,999);
+(dre_on_cam23_blue_discontinue_1,%f,-999,999);
+(dre_on_cam23_Brightness_discontinue_2,%f,-999,999);
+(dre_on_cam23_red_discontinue_2,%f,-999,999);
+(dre_on_cam23_green_discontinue_2,%f,-999,999);
+(dre_on_cam23_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+538,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+539,9,distance1 cam30,,,,LAN@cd /mnt/usr\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+540,,,,,,UART@Y+555.000\r\n,@Y,,,,,,0,UART move to 1m,OTFX082,
+541,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+542,,,,,,UART@R-008.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart,OTFX082,
+543,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+544,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+545,,"0,Overlap Slicer",,,,LAN@diag -s hdr_snapshot 2 3 1\r\n,@main close fail=-30,,,,,30000,0,cam0 snapshot,B7PL011,
+546,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+547,,,,,,LAN@diag -s hdr_snapshot 2 0 1\r\n,@main close fail=-30,,,,,30000,0,cam1 snapshot,B7PL011,
+548,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+549,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+550,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+551,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+552,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+553,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+554,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+555,,,,,,LAN@tftp -pl dump_cam3_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam0 yuv to PC,IPIO023,
+556,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+557,,,,,,LAN@tftp -pl dump_cam0_frm_hdr_yuv420_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,30000,0,copy cam1 yuv to PC,IPIO023,
+558,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+559,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+560,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam0-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+561,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam3-a1x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+562,,,,,,CmdConsole@del .\\Tool\\LutSimulator\\input\\cam0-a1x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+563,,,,,,CmdConsole@del Tool\LutSimulator\input\\new_cal_data_0.png Tool\LutSimulator\input\\new_cal_data_1.png Tool\LutSimulator\input\\new_cal_data_2.png Tool\LutSimulator\input\\new_cal_data_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+564,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+565,,,,,,CmdConsole@move .\\tftp_data\\dump_cam3_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+566,,,,,,CmdConsole@move .\\tftp_data\\dump_cam0_frm_hdr_yuv420_0.yuv .\\Tool\\LutSimulator\\input\\cam0-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+567,,,,,,CmdConsole@cd Tool\LutSimulator\input\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+568,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam3-a1.yuv cam3-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+569,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+570,,,,,,CmdConsole@ffmpeg -s 3840x2160 -pix_fmt nv12 -i cam0-a1.yuv cam0-a1x.png 2>&1\r\n,@speed,,,,,10000,0,cam1 yuv to png,IOCD041,
+571,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+572,,,,,,CmdConsole@ffmpeg -i cam3-a1x.png -vf transpose=1 new_cal_data_3.png 2>&1\r\n,@speed,,,,,10000,0,cam0 png rotate,IOCD041,
+573,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+574,,,,,,CmdConsole@ffmpeg -i cam0-a1x.png -vf transpose=2 new_cal_data_0.png 2>&1\r\n,@speed,,,,,10000,0,cam1 png rotate,IOCD041,
+575,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+576,,,,,,CmdConsole@del cam3-a1.yuv cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+577,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+578,,,,,,CmdConsole@del cam3-a1x.png cam0-a1x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+579,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+580,,,,,,"CmdConsole@copy ""..\green_temp\temp1.png"" "".\\new_cal_data_1.png""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+581,,,,,,"CmdConsole@copy ""..\green_temp\temp2.png"" "".\\new_cal_data_2.png""\r\n",@,,,,,,0,TRY_TEXT,IOCD041,
+582,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+583,,,,,,CmdConsole@cd ..\exe\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+584,,,,,,CmdConsole@LutSimulator.exe ..\input\b.json\r\n,@ProcTime,,,,,20000,0,execute LUTsimulator,IOCD041,
+585,,,,,,CmdConsole@cd ..\..\overlapSlicer_1_0_1\exe\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+586,,,,,,CmdConsole@OverlapSlicer.exe ..\..\..\\tftp_data\1m_camview_anchors.txt ..\..\LutSimulator\output ..\output 1 2>&1\r\n,@img id: 3\r\n,,,,,20000,0,execute Overlapslicer,IOCD041,
+587,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+588,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_0_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+589,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+590,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_1_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+591,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+592,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_2_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+593,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_L_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+594,,,,,,CmdConsole@xcopy ..\output\GlobalCrop_Block_3_R_Overlap.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+595,,,,,,CmdConsole@xcopy ..\..\Stitching_2DLUT_Gen_Tool\exe\CheckStitched.png ..\..\..\Station_Record\*(ISN)+*(time)\Overlapslicer_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+596,,,,,,CmdConsole@cd ..\..\PatternChecker_nocuda_v1.0.1\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+597,,"0,PatternChecker",,,,CmdConsole@PatternCheck.exe CIRCULAR ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_3_L_Overlap.png ..\overlapSlicer_1_0_1\output\GlobalCrop_Block_0_R_Overlap.png  output  input\key.json 3\r\n,@Corresponding Points error,,,,,40000,0,execute patternchecker,WUCA002,
+598,,,,,,CmdConsole@move output\output_left.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+599,,,,,,CmdConsole@move output\output_right.png ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+600,,,,,,CmdConsole@move output\circular_point_left.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+601,,,,,,CmdConsole@move output\circular_point_right.json ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+602,,,,,,CmdConsole@move output\score.txt ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam30\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+603,,,,,,CmdConsole@..\print_txt\print_txt.exe ..\..\Station_Record\*(ISN)+*(time)\PatternChecker_output\d1_cam30\score.txt\r\n,@Bottom Y Max error,,"P75 Y error:maString,""P75 Y error\: "":mbString,""\r\nMax Y error"";
+Top Y P75 error:maString,""Top Y P75 error\: "":mbString,""\r\nTop Y Max error"";
+Center Y P75 error:maString,""Center Y P75 error\: "":mbString,""\r\nCenter Y Max error"";
+Bottom Y P75 error:maString,""Bottom Y P75 error\: "":mbString,""\r\nBottom Y Max error"";","(P75 Y error,%f,-50,50);
+(Top Y P75 error,%f,-50,50);
+(Center Y P75 error,%f,-50,50);
+(Bottom Y P75 error,%f,-50,50);",,,0,check pattern error,WUCA002,
+604,,,,,,CmdConsole@cd ..\LutSimulator\input\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+605,,,,,,CmdConsole@del cam0-a1.yuv cam1-a1.yuv cam2-a1.yuv cam3-a1.yuv\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+606,,,,,,CmdConsole@del new_cal_data_0x.png new_cal_data_1x.png new_cal_data_2x.png new_cal_data_3x.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+607,,,,,,CmdConsole@del new_cal_data_0.png new_cal_data_1.png new_cal_data_2.png new_cal_data_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+608,,,,,,CmdConsole@cd ..\output\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+609,,,,,,CmdConsole@del Global_Block_0.png Global_Block_1.png Global_Block_2.png Global_Block_3.png\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+610,,4cam test,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+611,,,,,,LAN@diag -s hdr_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+612,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+613,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_0.yuv,,,,,,0,TRY_TEXT,B7PL011,
+614,,,,,,LAN@diag -s hdr_dre_snapshot 2 4 1\r\n,@main close fail=-30,,,,,60000,0,4cam snapshot,B7PL011,
+615,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+616,,,,,,LAN@ls\r\n,@dump_4cam_bs_snap_hdr_dre_0.yuv,,,,,,0,TRY_TEXT,B7PL011,
+617,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+618,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+619,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+620,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+621,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+622,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+623,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+624,,,,,,LAN@tftp -pl dump_4cam_bs_snap_hdr_dre_0.yuv *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+625,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+626,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_30\dre_off\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+627,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_snap_hdr_dre_0.yuv Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_30\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+628,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+629,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_30\dre_off\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+630,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_0.yuv 4cam_cam30_dre_off.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+631,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+632,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+633,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+634,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+635,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_30\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+636,,,,,,CmdConsole@cd Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_30\dre_on\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+637,,,,,,CmdConsole@ffmpeg -s 7680x3840 -pix_fmt nv12 -i dump_4cam_bs_snap_hdr_dre_0.yuv 4cam_cam30_dre_on.png 2>&1\r\n,@speed,,,,,10000,0,cam0 yuv to png,IOCD041,
+638,,,,,,":Delay,""2000""",0,,,,,,0,PC#-#Delay,IOET160,
+639,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+640,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+641,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+642,,,,,,CmdConsole@\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+643,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_30\dre_off/\r\n,@blue_discontinue_2_END,,"$dre_off_cam30_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_off_cam30_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_off_cam30_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_off_cam30_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_off_cam30_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_off_cam30_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_off_cam30_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_off_cam30_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_off_cam30_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_off_cam30_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_off_cam30_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_off_cam30_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_off_cam30_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_off_cam30_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_off_cam30_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_off_cam30_MAX_PixelsShift_0,%f,-999,999);
+(dre_off_cam30_MAX_PixelsShift_1,%f,-999,999);
+(dre_off_cam30_MAX_PixelsShift_2,%f,-999,999);
+(dre_off_cam30_Brightness_discontinue_0,%f,-999,999);
+(dre_off_cam30_red_discontinue_0,%f,-999,999);
+(dre_off_cam30_green_discontinue_0,%f,-999,999);
+(dre_off_cam30_blue_discontinue_0,%f,-999,999);
+(dre_off_cam30_Brightness_discontinue_1,%f,-999,999);
+(dre_off_cam30_red_discontinue_1,%f,-999,999);
+(dre_off_cam30_green_discontinue_1,%f,-999,999);
+(dre_off_cam30_blue_discontinue_1,%f,-999,999);
+(dre_off_cam30_Brightness_discontinue_2,%f,-999,999);
+(dre_off_cam30_red_discontinue_2,%f,-999,999);
+(dre_off_cam30_green_discontinue_2,%f,-999,999);
+(dre_off_cam30_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+644,,,,,,CmdConsole@Tool\20250904_1420_TestStation_100cm\20250904_1420_TestStation_100cm.exe Station_Record\*(ISN)+*(time)\4cam\1m_stitch_area_30\dre_on/\r\n,@blue_discontinue_2_END,,"$dre_on_cam30_MAX_PixelsShift_0:maString,""MAX_PixelsShift_0="":mbString,""pixelsMAX_PixelsShift_0_END"";
+$dre_on_cam30_MAX_PixelsShift_1:maString,""MAX_PixelsShift_1="":mbString,""pixelsMAX_PixelsShift_1_END"";
+$dre_on_cam30_MAX_PixelsShift_2:maString,""MAX_PixelsShift_2="":mbString,""pixelsMAX_PixelsShift_2_END"";
+$dre_on_cam30_Brightness_discontinue_0:maString,""Brightness_discontinue_0="":mbString,""%Brightness_discontinue_0_END"";
+$dre_on_cam30_red_discontinue_0:maString,""red_discontinue_0="":mbString,""%red_discontinue_0_END"";
+$dre_on_cam30_green_discontinue_0:maString,""green_discontinue_0="":mbString,""%green_discontinue_0_END"";
+$dre_on_cam30_blue_discontinue_0:maString,""blue_discontinue_0="":mbString,""%blue_discontinue_0_END"";
+$dre_on_cam30_Brightness_discontinue_1:maString,""Brightness_discontinue_1="":mbString,""%Brightness_discontinue_1_END"";
+$dre_on_cam30_red_discontinue_1:maString,""red_discontinue_1="":mbString,""%red_discontinue_1_END"";
+$dre_on_cam30_green_discontinue_1:maString,""green_discontinue_1="":mbString,""%green_discontinue_1_END"";
+$dre_on_cam30_blue_discontinue_1:maString,""blue_discontinue_1="":mbString,""%blue_discontinue_1_END"";
+$dre_on_cam30_Brightness_discontinue_2:maString,""Brightness_discontinue_2="":mbString,""%Brightness_discontinue_2_END"";
+$dre_on_cam30_red_discontinue_2:maString,""red_discontinue_2="":mbString,""%red_discontinue_2_END"";
+$dre_on_cam30_green_discontinue_2:maString,""green_discontinue_2="":mbString,""%green_discontinue_2_END"";
+$dre_on_cam30_blue_discontinue_2:maString,""blue_discontinue_2="":mbString,""%blue_discontinue_2_END"";","(dre_on_cam30_MAX_PixelsShift_0,%f,-999,999);
+(dre_on_cam30_MAX_PixelsShift_1,%f,-999,999);
+(dre_on_cam30_MAX_PixelsShift_2,%f,-999,999);
+(dre_on_cam30_Brightness_discontinue_0,%f,-999,999);
+(dre_on_cam30_red_discontinue_0,%f,-999,999);
+(dre_on_cam30_green_discontinue_0,%f,-999,999);
+(dre_on_cam30_blue_discontinue_0,%f,-999,999);
+(dre_on_cam30_Brightness_discontinue_1,%f,-999,999);
+(dre_on_cam30_red_discontinue_1,%f,-999,999);
+(dre_on_cam30_green_discontinue_1,%f,-999,999);
+(dre_on_cam30_blue_discontinue_1,%f,-999,999);
+(dre_on_cam30_Brightness_discontinue_2,%f,-999,999);
+(dre_on_cam30_red_discontinue_2,%f,-999,999);
+(dre_on_cam30_green_discontinue_2,%f,-999,999);
+(dre_on_cam30_blue_discontinue_2,%f,-999,999);",,30000,0,check discontinue,WUCA002,
+645,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_snap_hdr_0.yuv dump_4cam_bs_snap_hdr_dre_0.yuv\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+646,10,distance2 cam01,,,,LAN@cd /mnt/usr\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+647,,,,,,UART@Y+055.000\r\n,@Y,,,,,,0,UART move to 1.5m,OTFX082,
+648,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+649,,,,,,UART@R-278.000\r\n,@R,,,,,,0,UART rotate cam01 face to chart(fatp),OTFX082,
+650,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+651,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+652,,,,,,LAN@diag -s hdr_snapshot 1 4 1\r\n,@main close fail=-30,,,,,60000,02:04,4cam snapshot,B7PL011,
+653,,,,,,LAN@ls\r\n,@dump_4cam_bs_hdr_snap0.jpg,,,,,,02:04,4cam snapshot,B7PL011,
+654,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+655,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+656,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+657,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+658,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+659,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+660,,,,,,LAN@tftp -pl dump_4cam_bs_hdr_snap0.jpg *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+661,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+662,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_hdr_snap0.jpg Station_Record\*(ISN)+*(time)\4cam\1.5m_stitch_area_01\*(ISN)+1.5m_cam01.jpg\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+663,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+664,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+665,11,distance2 cam12,,,,LAN@cd /mnt/usr\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+666,,,,,,UART@R-188.000\r\n,@R,,,,,,0,UART rotate cam12 face to chart(fatp),OTFX082,
+667,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+668,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+669,,,,,,LAN@diag -s hdr_snapshot 1 4 1\r\n,@main close fail=-30,,,,,60000,02:02,4cam snapshot,B7PL011,
+670,,,,,,LAN@ls\r\n,@dump_4cam_bs_hdr_snap0.jpg,,,,,,02:02,4cam snapshot,B7PL011,
+671,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+672,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+673,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+674,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+675,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+676,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+677,,,,,,LAN@tftp -pl dump_4cam_bs_hdr_snap0.jpg *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+678,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+679,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_hdr_snap0.jpg Station_Record\*(ISN)+*(time)\4cam\1.5m_stitch_area_12\*(ISN)+1.5m_cam12.jpg\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+680,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+681,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+682,12,distance2 cam23,,,,LAN@cd /mnt/usr\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+683,,,,,,UART@R-098.000\r\n,@R,,,,,,0,UART rotate cam23 face to chart(fatp),OTFX082,
+684,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+685,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+686,,,,,,LAN@diag -s hdr_snapshot 1 4 1\r\n,@main close fail=-30,,,,,60000,02:02,4cam snapshot,B7PL011,
+687,,,,,,LAN@ls\r\n,@dump_4cam_bs_hdr_snap0.jpg,,,,,,02:02,4cam snapshot,B7PL011,
+688,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+689,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+690,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+691,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+692,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+693,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+694,,,,,,LAN@tftp -pl dump_4cam_bs_hdr_snap0.jpg *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+695,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+696,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_hdr_snap0.jpg Station_Record\*(ISN)+*(time)\4cam\1.5m_stitch_area_23\*(ISN)+1.5m_cam23.jpg\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+697,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+698,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+699,13,distance2 cam30,,,,LAN@cd /mnt/usr\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+700,,,,,,UART@R-008.000\r\n,@R,,,,,,0,UART rotate cam30 face to chart(fatp),OTFX082,
+701,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+702,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+703,,,,,,LAN@diag -s hdr_snapshot 1 4 1\r\n,@main close fail=-30,,,,,60000,02:02,4cam snapshot,B7PL011,
+704,,,,,,LAN@ls\r\n,@dump_4cam_bs_hdr_snap0.jpg,,,,,,02:02,4cam snapshot,B7PL011,
+705,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+706,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+707,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+708,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+709,,,,,,CmdConsole@Tool\\tftpd64.exe\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+710,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+711,,,,,,LAN@tftp -pl dump_4cam_bs_hdr_snap0.jpg *$(PCIP_1) -b 50000\r\n,@100%,,,,,20000,0,copy 4cam jpg to PC,IPIO023,
+712,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+713,,,,,,CmdConsole@move tftp_data\dump_4cam_bs_hdr_snap0.jpg Station_Record\*(ISN)+*(time)\4cam\1.5m_stitch_area_30\*(ISN)+1.5m_cam30.jpg\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+714,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+715,,,,,,LAN@rm dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+716,14,show spec_type,,,,CmdConsole@Tool\250908_classification\250908_classification.exe *(dre_on_cam01_MAX_PixelsShift_0) *(dre_on_cam01_MAX_PixelsShift_1) *(dre_on_cam01_MAX_PixelsShift_2) *(dre_on_cam01_Brightness_discontinue_0) *(dre_on_cam01_red_discontinue_0) *(dre_on_cam01_green_discontinue_0) *(dre_on_cam01_blue_discontinue_0) *(dre_on_cam01_Brightness_discontinue_1) *(dre_on_cam01_red_discontinue_1) *(dre_on_cam01_green_discontinue_1) *(dre_on_cam01_blue_discontinue_1) *(dre_on_cam01_Brightness_discontinue_2) *(dre_on_cam01_red_discontinue_2) *(dre_on_cam01_green_discontinue_2) *(dre_on_cam01_blue_discontinue_2) *(dre_on_cam12_MAX_PixelsShift_0) *(dre_on_cam12_MAX_PixelsShift_1) *(dre_on_cam12_MAX_PixelsShift_2) *(dre_on_cam12_Brightness_discontinue_0) *(dre_on_cam12_red_discontinue_0) *(dre_on_cam12_green_discontinue_0) *(dre_on_cam12_blue_discontinue_0) *(dre_on_cam12_Brightness_discontinue_1) *(dre_on_cam12_red_discontinue_1) *(dre_on_cam12_green_discontinue_1) *(dre_on_cam12_blue_discontinue_1) *(dre_on_cam12_Brightness_discontinue_2) *(dre_on_cam12_red_discontinue_2) *(dre_on_cam12_green_discontinue_2) *(dre_on_cam12_blue_discontinue_2) *(dre_on_cam23_MAX_PixelsShift_0) *(dre_on_cam23_MAX_PixelsShift_1) *(dre_on_cam23_MAX_PixelsShift_2) *(dre_on_cam23_Brightness_discontinue_0) *(dre_on_cam23_red_discontinue_0) *(dre_on_cam23_green_discontinue_0) *(dre_on_cam23_blue_discontinue_0) *(dre_on_cam23_Brightness_discontinue_1) *(dre_on_cam23_red_discontinue_1) *(dre_on_cam23_green_discontinue_1) *(dre_on_cam23_blue_discontinue_1) *(dre_on_cam23_Brightness_discontinue_2) *(dre_on_cam23_red_discontinue_2) *(dre_on_cam23_green_discontinue_2) *(dre_on_cam23_blue_discontinue_2) *(dre_on_cam30_MAX_PixelsShift_0) *(dre_on_cam30_MAX_PixelsShift_1) *(dre_on_cam30_MAX_PixelsShift_2) *(dre_on_cam30_Brightness_discontinue_0) *(dre_on_cam30_red_discontinue_0) *(dre_on_cam30_green_discontinue_0) *(dre_on_cam30_blue_discontinue_0) *(dre_on_cam30_Brightness_discontinue_1) *(dre_on_cam30_red_discontinue_1) *(dre_on_cam30_green_discontinue_1) *(dre_on_cam30_blue_discontinue_1) *(dre_on_cam30_Brightness_discontinue_2) *(dre_on_cam30_red_discontinue_2) *(dre_on_cam30_green_discontinue_2) *(dre_on_cam30_blue_discontinue_2) 2>&1 \r\n,@SPEC_PASS,,,,,10000,0,check discontinue,IOCD041,
+717,15,write 2dlut to emmc,,,,":GetVal,""*(ISN)""",,,,"(ISN,%len,11,11);",,,"4:1,14",check SPK_FR_250,IPAU001,
+718,,,,,,LAN@cd /var/vsp\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+719,,,,,,LAN@echo 0 > /sys/block/mmcblk2boot1/force_ro\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+720,,,,,,"LAN@mount -o remount,rw -t ext4 /dev/mmcblk2boot1 /mnt/mf\r\n",@,,,,,,0,TRY_TEXT,IMU0019,
+721,,,,,,LAN@mount\r\n,"@/mnt/mf type ext4 (rw,relatime)",,,,,,0,TRY_TEXT,IMU0019,
+722,,,,,,LAN@tar zcvf stitching.tar.gz 1m_cam0_LUT257_ROT90_hflip0.bin 1m_cam1_LUT257_ROT-90_hflip0.bin 1m_cam2_LUT257_ROT90_hflip0.bin 1m_cam3_LUT257_ROT-90_hflip0.bin 1m_camview_anchors.txt 3m_cam0_LUT257_ROT90_hflip0.bin 3m_cam1_LUT257_ROT-90_hflip0.bin 3m_cam2_LUT257_ROT90_hflip0.bin 3m_cam3_LUT257_ROT-90_hflip0.bin 3m_camview_anchors.txt 5m_cam0_LUT257_ROT90_hflip0.bin 5m_cam1_LUT257_ROT-90_hflip0.bin 5m_cam2_LUT257_ROT90_hflip0.bin 5m_cam3_LUT257_ROT-90_hflip0.bin 5m_camview_anchors.txt stitch_ecs_rgb_data0.bin stitch_ecs_rgb_data1.bin stitch_ecs_rgb_data2.bin stitch_ecs_rgb_data3.bin\r\n,@\r\n1m_cam0,,,,,,0,TRY_TEXT,IMU0019,
+723,,,,,,LAN@cd /mnt/mf\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+724,,,,,,LAN@mkdir vsp\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+725,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+726,,,,,,LAN@cd /var/vsp\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+727,,,,,,LAN@mv stitching.tar.gz /mnt/mf/vsp\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+728,,,,,,LAN@echo 1 > /sys/block/mmcblk2boot1/force_ro\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+729,,,,,,LAN@mount -o remount -t ext4 /dev/mmcblk2boot1 /mnt/mf\r\n,@,,,,,,0,TRY_TEXT,IMU0019,
+730,,,,,,LAN@mount\r\n,"@/mnt/mf type ext4 (ro,relatime)",,,,,,0,TRY_TEXT,IMU0019,
+731,,,,,,":Delay,""0000""",0,,,,,,0,PC#-#Delay,IOET160,
+732,97,Disconnection,,,,LAN@cd /mnt/usr\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+733,,,,,,LAN@rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv dump_4cam_bs_hdr_snap0.jpg\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+734,,,,,,LAN@reboot\r\n,@,,,,,,0,TRY_TEXT,B7PL011,
+735,,,,,,":Delay,""5000""",0,,,,,,0,PC#-#Delay,IOET160,
+736,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+737,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+738,,,,,,":Connect,""CmdConsole""",0,,,,,,0,PC#-#Connect CMD,OTCH013,
+739,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+740,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\input\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+741,,,,,,CmdConsole@cd Tool\Stitching_2DLUT_Gen_Tool\input\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+742,,,,,,CmdConsole@del new_cal_data_0.yml new_cal_data_1.yml new_cal_data_2.yml new_cal_data_3.yml\r\n,@,,,,,,0,TRY_TEXT,IOCD041,
+743,,,,,,CmdConsole@cd ..\..\..\\tftp_data\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+744,,,,,,CmdConsole@del 1m_cam0_LUT257_ROT90_hflip0.bin 1m_cam1_LUT257_ROT-90_hflip0.bin 1m_cam2_LUT257_ROT90_hflip0.bin 1m_cam3_LUT257_ROT-90_hflip0.bin 1m_camview_anchors.txt\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+745,,,,,,CmdConsole@del 3m_cam0_LUT257_ROT90_hflip0.bin 3m_cam1_LUT257_ROT-90_hflip0.bin 3m_cam2_LUT257_ROT90_hflip0.bin 3m_cam3_LUT257_ROT-90_hflip0.bin 3m_camview_anchors.txt\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+746,,,,,,CmdConsole@del 5m_cam0_LUT257_ROT90_hflip0.bin 5m_cam1_LUT257_ROT-90_hflip0.bin 5m_cam2_LUT257_ROT90_hflip0.bin 5m_cam3_LUT257_ROT-90_hflip0.bin 5m_camview_anchors.txt\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+747,,,,,,CmdConsole@del stitch_ecs_rgb_data0.bin stitch_ecs_rgb_data1.bin stitch_ecs_rgb_data2.bin stitch_ecs_rgb_data3.bin\r\n,,,,,,,0,TRY_TEXT,IOCD041,
+748,,,,,,":Delay,""100""",0,,,,,,0,PC#-#Delay,IOET160,
+749,,,,,,":Disconnect,""CmdConsole""",0,,,,,,0,PC#-#Disconnect CMD,OTCH013,
+750,,,,,,":Disconnect,""LAN""",,,,,,,0,LAN disconnection,RVRF067,
+751,,,,,,UART@Y+004.000\r\n,@Y,,,,,,0,UART move to OP,OTFX082,
+752,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+753,,,,,,UART@R-323.000\r\n,@R,,,,,,0,UART rotate to OP,OTFX082,
+754,,,,,,":Delay,""500""",0,,,,,,0,PC#-#Delay,IOET160,
+755,,,,,,":Disconnect,""UART""",0,,,,,,0,UART disconnection,OTFX082,
+756,,,,,,":Delay,""1000""",0,,,,,,0,PC#-#Delay,IOET160,
+757,,,,,,:CloseMessage,0,,,,,,3,PC#-#Close Message,OTFX054,
