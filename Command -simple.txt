@@ -1,0 +1,18 @@
+
+#ssh root@192.168.11.143
+# 基本系統資訊指令
+sn dev = diag -g sn dev
+sn mb = diag -g sn mb
+sku = diag -g sku
+version = pegacmd version
+
+# 快照指令 yuv
+hdr_snapshot_0 = diag -s hdr_snapshot 2 0
+hdr_snapshot_1 = diag -s hdr_snapshot 2 1
+hdr_snapshot_2 = diag -s hdr_snapshot 2 2
+hdr_snapshot_3 = diag -s hdr_snapshot 2 3
+hdr_snapshot_4 = diag -s hdr_snapshot 2 4
+hdr_dre_snapshot = diag -s hdr_dre_snapshot 2 4
+
+#JPG only 4 cam
+hdr_snapshot_4 = diag -s hdr_snapshot 1 4

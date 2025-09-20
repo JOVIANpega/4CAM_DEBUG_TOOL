@@ -1,0 +1,28 @@
+# 常用 LINUX 指令（格式：NAME = COMMAND）
+# 範例：列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/
+
+
+檢查EEP是否有資料= diag -g eep tar 0||ls -la /tmp/tar
+
+列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/
+FIX拍照BUG1=ls -la /var/vsp/*
+FIX拍照BUG2=cp -prf /usr/vsp/* /var/vsp/
+FIX拍照BUG3=diag -s snapshot 1 4
+刪除 /mnt/usr/ JPG 檔 = rm -f /mnt/usr/*.jpg
+刪除 /mnt/usr/ YUV 檔 = rm -f /mnt/usr/*.yuv
+刪除 /var/vsp/ JPG 檔 = rm -f /var/vsp/*.jpg
+刪除 /var/vsp/ YUV 檔 = rm -f /var/vsp/*.yuv
+顯示系統資訊 = uname -a
+顯示目前目錄詳細檔案 = ls -la
+列出根目錄檔案 = ls -la /
+列出使用者目錄檔案 = ls -la /mnt/usr
+網路介面 = ifconfig
+VSP 目錄顯示 = ls -la /var/vsp/*
+TMP TAR 目錄 = ls -la /tmp/tar
+檢查錄影程序 = ps aux | grep hd_video
+檢查診斷程序 = ps aux | grep diag
+停止錄影程序 = killall hd_video_record_with_vsp_4dev_smart2_pega_dre
+檢查 /tmp 空間 = df -h /tmp
+檢查 /var/vsp 空間 = df -h /var/vsp
+檢查 /mnt/usr 空間 = df -h /mnt/usr
+

@@ -1,0 +1,30 @@
+# 4CAM_DEBUG_TOOL 指令表（名稱 = 指令）
+
+# 基本
+pwd = pwd
+ls_root = ls /
+ls_usr = ls /mnt/usr/
+version = pegacmd version
+
+# 設備資訊
+sn_dev = diag -g sn dev
+sn_mb = diag -g sn mb
+sku = diag -g sku
+
+# EEPROM
+eep_qr_0 = diag -g eep qr 0
+eep_qr_1 = diag -g eep qr 1
+eep_qr_2 = diag -g eep qr 2
+eep_qr_3 = diag -g eep qr 3
+
+# 溫度
+temp_s0 = diag -g temp s0
+temp_s1 = diag -g temp s1
+temp_s2 = diag -g temp s2
+temp_s3 = diag -g temp s3
+
+# 快照
+hdr_snapshot = diag -s hdr_snapshot 2 4 1
+hdr_dre_snapshot = diag -s hdr_dre_snapshot 2 4 1
+
+

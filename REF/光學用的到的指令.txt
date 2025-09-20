@@ -1,0 +1,4 @@
+copy JPG to D:\VALO360\4CAM\
+mkdir VALO360\4CAM\
+scp -O root@192.168.11.143:/mnt/usr/*.jpg D:\VALO360\4CAM\
+

@@ -1,0 +1,2 @@
+# 4CAM_DEBUG_TOOL 依賴套件
+paramiko>=2.8.0

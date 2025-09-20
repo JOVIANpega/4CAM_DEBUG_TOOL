@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>4CAM_DEBUG_TOOL 使用說明</title>
+    <style>
+        body {
+            font-family: 'Microsoft JhengHei', Arial, sans-serif;
+            line-height: 1.6;
+            margin: 40px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+            border-bottom: 3px solid #3498db;
+            padding-bottom: 10px;
+        }
+        h2 {
+            color: #34495e;
+            margin-top: 30px;
+            border-left: 4px solid #3498db;
+            padding-left: 15px;
+        }
+        h3 {
+            color: #2980b9;
+            margin-top: 20px;
+        }
+        .section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f8f9fa;
+            border-radius: 5px;
+        }
+        .code {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            margin: 10px 0;
+            overflow-x: auto;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 10px;
+            border-left: 4px solid #ffc107;
+            margin: 10px 0;
+        }
+        .warning {
+            background: #f8d7da;
+            padding: 10px;
+            border-left: 4px solid #dc3545;
+            margin: 10px 0;
+        }
+        ul, ol {
+            margin: 10px 0;
+            padding-left: 30px;
+        }
+        li {
+            margin: 5px 0;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 15px 0;
+        }
+        th, td {
+            border: 1px solid #ddd;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #3498db;
+            color: white;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 40px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            color: #7f8c8d;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>4CAM_DEBUG_TOOL 使用說明</h1>
+        
+        <div class="section">
+            <h2>🖥️ 介面總覽（ASCII）</h2>
+            <div class="code">
+┌───────────────────────────────────────────────────────────────────────────────┐
+│ 左側（可分頁）                                                    右側輸出區 │
+├───────────────────────────────────────────────────────────┬───────────────────┤
+│ 連線設定                                                  │ 回傳內容  ○(燈)  │
+│  ├─ DUT IP: [____________]   PC IP: [____________]         │ 搜尋[____] [找]  │
+│  ├─ Username: [root]   Timeout(sec): [ 60 ]               │ [清除標記]       │
+│  └─ [測試連線]  [重新載入指令]                             │───────────────────│
+│ 全域控制                                                  │ 輸出視窗（可捲動）│
+│  ├─ [✔] 每次下指令清除舊訊息    [使用說明]（綠色）         │ 文字結果...      │
+│ 分頁： [ 指令 ] [ LINUX 指令 ] [ 檔案傳輸 ]（棕色標籤）      │                  │
+│ ─ 指令分頁 ──────────────────────────────────────────────│                  │
+│  指令檔： [ REF/Command.txt                ] [選擇] [開啟]  │                  │
+│  指令選擇： [ 1. 名稱 = 指令...                  ▾ ]       │                  │
+│  [執行指令]（藍色）                                        │                  │
+│ ─ LINUX 指令分頁 ────────────────────────────────────────│                  │
+│  LINUX 指令檔： [ COMMANDS/linux.txt          ] [選擇] [開啟] │                 │
+│  指令選擇：   [ 1. 名稱 = 指令...                 ▾ ]      │                  │
+│  手動輸入：  [ 輸入 Linux 指令... ] [執行]（藍色）         │                  │
+│  清理快捷： [ ] 刪除 /mnt/usr/ JPG   [ ] 刪除 /mnt/usr/ YUV │                  │
+│           [ ] 刪除 /var/vsp/ JPG   [ ] 刪除 /var/vsp/ YUV  │                  │
+│           [執行刪除]（藍色）                               │                  │
+│ ─ 檔案傳輸分頁（DUT→PC） ──────────────────────────────│                  │
+│  常用路徑： [ 選擇常用路徑...                  ▾ ]          │                  │
+│  來源（DUT glob）： [ /mnt/usr/*.jpg              ]          │                  │
+│  目標（PC 資料夾）： [ D:\VALO360\JPG               ] [📁]  │                  │
+│  [將DUT所有資料下載到PC]   [開始傳輸]（藍色）               │                  │
+└───────────────────────────────────────────────────────────┴───────────────────┘
+            </div>
+            <ul>
+                <li><strong>連線設定</strong>：位於左側最上方，測試連線按鈕可快速檢查 SSH。</li>
+                <li><strong>全域控制</strong>：連線設定下方有「每次下指令清除舊訊息」勾選與綠色「使用說明」。</li>
+                <li><strong>三分頁</strong>：指令、LINUX 指令、檔案傳輸；分頁標籤為紅底（選中更深紅）。</li>
+                <li><strong>滑過變色</strong>：按鈕與勾選框 hover 會變深色（藍/綠），離開還原。</li>
+                <li><strong>可拖曳分隔</strong>：左右視窗可拖曳改變寬度；關閉時會記住位置並於下次還原。</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>📘 linux.txt 說明與常見指令解釋</h2>
+            <p>常用 LINUX 指令由 <code>COMMANDS/linux.txt</code> 載入，一行一筆，格式：</p>
+            <div class="code">名稱 = 實際指令</div>
+            <p>例如：</p>
+            <div class="code">列出 /mnt/usr/ 所有檔案 = ls -la /mnt/usr/</div>
+
+            <h3>常見項目與用途</h3>
+            <table>
+                <tr><th>名稱（下拉顯示）</th><th>實際指令</th><th>用途/說明</th><th>注意事項</th></tr>
+                <tr>
+                    <td>列出 /mnt/usr/ 所有檔案</td>
+                    <td><code>ls -la /mnt/usr/</code></td>
+                    <td>檢視 DUT 使用者資料夾內檔案清單，含權限/大小/時間。</td>
+                    <td>大量輸出可配合右上搜尋功能定位檔名。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /mnt/usr/ JPG 檔</td>
+                    <td><code>rm -f /mnt/usr/*.jpg</code></td>
+                    <td>清理 JPG 圖片。</td>
+                    <td><strong>不可復原</strong>，請先用 ls 確認目錄與檔案。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /mnt/usr/ YUV 檔</td>
+                    <td><code>rm -f /mnt/usr/*.yuv</code></td>
+                    <td>清理 YUV 影像。</td>
+                    <td><strong>不可復原</strong>，請先用 ls 確認目錄與檔案。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /var/vsp/ JPG 檔</td>
+                    <td><code>rm -f /var/vsp/*.jpg</code></td>
+                    <td>清理 VSP 目錄下 JPG。</td>
+                    <td>確認權限與路徑是否正確。</td>
+                </tr>
+                <tr>
+                    <td>刪除 /var/vsp/ YUV 檔</td>
+                    <td><code>rm -f /var/vsp/*.yuv</code></td>
+                    <td>清理 VSP 目錄下 YUV。</td>
+                    <td>確認權限與路徑是否正確。</td>
+                </tr>
+            </table>
+
+            <h3>範例輸出（實際執行紀錄）</h3>
+            <h4>常用 LINUX 指令</h4>
+            <div class="code">
+送出指令: ls -la /mnt/usr/
+$ ls -la /mnt/usr/
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+total 103984
+drwxr-xr-x    4 0        root          4096 Sep 11 08:06 .
+drwxrwxr-x   19 0        root             0 Jan  1  1970 ..
+-rw-r--r--    1 0        root      44236800 Sep 11 07:27 dump_4cam_bs_snap_hdr_dre_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 06:09 dump_cam0_frm_hdr_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 07:38 dump_cam0_frm_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 07:00 dump_cam1_frm_hdr_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 07:38 dump_cam1_frm_yuv420_0.yuv
+-rw-r--r--    1 0        root      12441600 Sep 11 06:52 dump_cam3_frm_hdr_yuv420_0.yuv
+drwx------    2 0        root         16384 Jan  1  1970 lost+found
+drwxr-xr-x    8 0        root          4096 Jun 27 10:05 odm
+Exit code: 0
+===指令完畢===
+
+送出指令: rm -f /mnt/usr/*.jpg
+$ rm -f /mnt/usr/*.jpg
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+Exit code: 0
+===指令完畢===
+
+送出指令: rm -f /mnt/usr/*.yuv
+$ rm -f /mnt/usr/*.yuv
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+Exit code: 0
+===指令完畢===
+            </div>
+
+            <h4>檔案傳輸</h4>
+            <div class="code">
+已選擇：/mnt/usr/*.jpg - JPG 圖片檔案
+來源路徑：/mnt/usr/*.jpg
+建議目標：D:\VALO360\4CAM\JPG
+🔍 檢查檔案中...
+⚠️ 沒有找到匹配的檔案
+💡 點擊「開始傳輸」按鍵開始複製檔案
+===指令完畢===
+已選擇：/mnt/usr/*.yuv - YUV 影像檔案
+來源路徑：/mnt/usr/*.yuv
+建議目標：D:\VALO360\4CAM\YUV
+🔍 檢查檔案中...
+⚠️ 沒有找到匹配的檔案
+💡 點擊「開始傳輸」按鍵開始複製檔案
+===指令完畢===
+已選擇：/mnt/usr/*.bin - BIN 二進位檔案
+來源路徑：/mnt/usr/*.bin
+建議目標：D:\VALO360\4CAM\BIN
+🔍 檢查檔案中...
+⚠️ 沒有找到匹配的檔案
+💡 點擊「開始傳輸」按鍵開始複製檔案
+===指令完畢===
+            </div>
+
+            <h4>指令控制（Command.txt）</h4>
+            <div class="code">
+送出指令: diag -g sn dev
+$ diag -g sn dev
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+diag: dev sn WE251400006
+Exit code: 0
+===指令完畢===
+送出指令: diag -g sku
+$ diag -g sku
+sh: bash: not found
+NOKIA360Camera-WE251400006 Linux shell...
+diag: sku N3C2401C
+Exit code: 0
+===指令完畢===
+            </div>
+
+            <h3>管理建議</h3>
+            <ul>
+                <li>可直接以文字編輯器維護 <code>COMMANDS/linux.txt</code>，新增或刪除專案需要的指令。</li>
+                <li>下拉顯示會自動加上 1/2/3… 編號，僅為顯示用，不影響實際送出的指令。</li>
+                <li>若指令過長，滑鼠停留在下拉上會顯示放大的提示視窗（Tooltip）。</li>
+            </ul>
+        </div>
+
+       
+    </div>
+</body>
+</html>
+        <div class="section">
+            <h2>📋 工具概述</h2>
+            <p><strong>4CAM_DEBUG_TOOL</strong> 是一個專為 4 攝影機 DUT（Device Under Test）設計的 SSH 控制工具，提供直觀的圖形介面來執行遠端指令和檔案傳輸。</p>
+        </div>
+
+        <div class="section">
+            <h2>🔧 主要功能</h2>
+            <ul>
+                <li><strong>SSH 連線管理</strong>：自動連線到 DUT 設備</li>
+                <li><strong>指令執行</strong>：支援預設指令和常用 Linux 指令</li>
+                <li><strong>檔案傳輸</strong>：使用 SCP 從 DUT 下載檔案到 PC</li>
+                <li><strong>設定保存</strong>：自動保存和載入使用者設定</li>
+                <li><strong>字體調整</strong>：可調整介面字體大小</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🚀 快速開始</h2>
+            <ol>
+                <li><strong>啟動程式</strong>：執行 <code>python main.py</code> 或雙擊 EXE 檔案</li>
+                <li><strong>檢查連線</strong>：程式會自動嘗試連線到 DUT</li>
+                <li><strong>執行指令</strong>：選擇指令並點擊「執行指令」</li>
+                <li><strong>檔案傳輸</strong>：設定來源和目標路徑，點擊「開始傳輸」</li>
+            </ol>
+        </div>
+
+        <div class="section">
+            <h2>⚙️ 連線設定</h2>
+            <table>
+                <tr><th>參數</th><th>預設值</th><th>說明</th></tr>
+                <tr><td>DUT IP</td><td>192.168.11.143</td><td>DUT 設備的 IP 位址</td></tr>
+                <tr><td>PC IP</td><td>192.168.11.142</td><td>本機 PC 的 IP 位址</td></tr>
+                <tr><td>使用者名稱</td><td>root</td><td>SSH 登入帳號</td></tr>
+                <tr><td>密碼</td><td>（空）</td><td>DUT 不需要密碼</td></tr>
+                <tr><td>超時時間</td><td>30 秒</td><td>指令執行超時時間</td></tr>
+            </table>
+        </div>
+
+        <div class="section">
+            <h2>📁 檔案傳輸</h2>
+            <h3>支援的來源格式：</h3>
+            <ul>
+                <li><strong>單一檔案</strong>：<code>/mnt/usr/image.jpg</code></li>
+                <li><strong>Glob 模式</strong>：<code>/mnt/usr/*.jpg</code></li>
+                <li><strong>多個檔案</strong>：<code>/mnt/usr/test_*.log</code></li>
+            </ul>
+            
+            <h3>目標目錄：</h3>
+            <ul>
+                <li>支援 Windows 路徑格式：<code>D:\VALO360CAM</code></li>
+                <li>如果目錄不存在，會自動建立</li>
+                <li>已存在的檔案會被覆蓋</li>
+            </ul>
+            
+            <div class="highlight">
+                <strong>💡 提示：</strong>檔案傳輸使用 SCP 協議，確保網路連線穩定。
+            </div>
+        </div>
+
+        <div class="section">
+            <h2>⌨️ 指令操作</h2>
+            <h3>預設指令（Command.txt）：</h3>
+            <ul>
+                <li>從 <code>REF/Command.txt</code> 載入預設指令</li>
+                <li>支援下拉選單選擇</li>
+                <li>指令格式：<code>指令名稱 = 完整指令</code></li>
+            </ul>
+            
+            <h3>常用 Linux 指令：</h3>
+            <ul>
+                <li><code>ls -la</code>：列出檔案詳細資訊</li>
+                <li><code>ps aux</code>：顯示執行中的程序</li>
+                <li><code>df -h</code>：顯示磁碟使用量</li>
+                <li><code>free -h</code>：顯示記憶體使用量</li>
+                <li><code>top</code>：即時系統監控</li>
+                <li><code>netstat -an</code>：顯示網路連線</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🎛️ 介面操作</h2>
+            <h3>左側控制面板：</h3>
+            <ul>
+                <li><strong>連線設定</strong>：設定 DUT 和 PC 的 IP 位址</li>
+                <li><strong>指令控制</strong>：載入和執行預設指令</li>
+                <li><strong>常用指令</strong>：快速執行 Linux 指令</li>
+                <li><strong>檔案傳輸</strong>：設定來源和目標路徑</li>
+            </ul>
+            
+            <h3>右側輸出面板：</h3>
+            <ul>
+                <li>顯示指令執行結果</li>
+                <li>顯示檔案傳輸狀態</li>
+                <li>顯示錯誤訊息和除錯資訊</li>
+                <li>支援「清空輸出」功能</li>
+            </ul>
+        </div>
+
+        <div class="section">
+            <h2>🔍 故障排除</h2>
+            <h3>常見問題：</h3>
+            <ol>
+                <li><strong>SSH 連線失敗</strong>：
+                    <ul>
+                        <li>檢查 DUT IP 位址是否正確</li>
+                        <li>確認 DUT 已開機且支援 SSH</li>
+                        <li>檢查網路連線</li>
+                    </ul>
+                </li>
+                <li><strong>指令執行失敗</strong>：
+                    <ul>
+                        <li>確認指令格式正確</li>
+                        <li>檢查 DUT 環境變數</li>
+                        <li>某些指令需要特定環境設定</li>
+                    </ul>
+                </li>
+                <li><strong>檔案傳輸失敗</strong>：
+                    <ul>
+                        <li>檢查來源路徑是否存在</li>
+                        <li>確認目標目錄權限</li>
+                        <li>檢查磁碟空間</li>
+                    </ul>
+                </li>
+            </ol>
+        </div>
+
+        <div class="warning">
+            <strong>⚠️ 注意事項：</strong>
+            <ul>
+                <li>請確保 DUT 設備已正確設定網路連線</li>
+                <li>某些 DUT 專用指令（如 diag）需要特定的環境變數</li>
+                <li>檔案傳輸時請確保目標磁碟有足夠空間</li>
+                <li>建議在執行重要操作前先測試連線</li>
+            </ul>
+        </div>
+
+      
