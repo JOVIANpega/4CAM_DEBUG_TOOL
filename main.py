@@ -24,6 +24,7 @@ import threading
 import tkinter as tk
 from tkinter import ttk, filedialog, messagebox
 from tkinter.scrolledtext import ScrolledText
+import tkinter.font as tkFont
 import logging
 import json
 from pathlib import Path
@@ -279,37 +280,189 @@ class FourCamDebugTool:
         except Exception:
             self._orig_styles = {}
 
-        # TTK 主題與按鈕 hover 樣式
+        # Windows 11 風格主題設定
         try:
             style = ttk.Style(self.root)
             style.theme_use('clam')
-            style.configure('Hover.TButton', background='#1976d2', foreground='white', padding=(10, 6))
-            # 單一輸入框高亮樣式（淡黃色）
-            style.configure('Highlight.TEntry', fieldbackground='#fff9c4')
             
-            # 綠色按鈕樣式（說明）
-            style.configure('Green.TButton', background='#4CAF50', foreground='white', padding=(10, 6))
-            style.map('Green.TButton', background=[('active', '#43A047')])
-            # 藍色按鈕樣式（測試SSH）
-            style.configure('Blue.TButton', background='#2196F3', foreground='white', padding=(10, 6))
-            style.map('Blue.TButton', background=[('active', '#1976D2')])
-            # 橙色按鈕樣式（存LOG）
-            style.configure('Orange.TButton', background='#FF9800', foreground='white', padding=(10, 6))
-            style.map('Orange.TButton', background=[('active', '#F57C00')])
-            # 紫色按鈕樣式（重載指令表）
-            style.configure('Purple.TButton', background='#9C27B0', foreground='white', padding=(10, 6))
-            style.map('Purple.TButton', background=[('active', '#7B1FA2')])
-            # 紅色按鈕樣式（清空右視窗）
-            style.configure('Red.TButton', background='#F44336', foreground='white', padding=(10, 6))
-            style.map('Red.TButton', background=[('active', '#D32F2F')])
-
-            # Checkbutton hover/選取樣式
-            style.configure('Hover.TCheckbutton', background='#1565c0', foreground='white')
-            style.map('Hover.TCheckbutton',
-                      background=[('active', '#1565c0'), ('selected', '#1565c0')],
-                      foreground=[('active', 'white'), ('selected', 'white')])
+            # 字體檢測函數 - 更詳細的檢測
+            def get_available_font():
+                font_candidates = [
+                    "Microsoft JhengHei Light",
+                    "Microsoft JhengHei UI Light", 
+                    "Microsoft JhengHei",
+                    "Microsoft YaHei Light",
+                    "Microsoft YaHei",
+                    "Segoe UI",
+                    "TkDefaultFont"
+                ]
+                
+                print("開始檢測可用字體...")
+                for font_name in font_candidates:
+                    try:
+                        test_font = tkFont.Font(family=font_name, size=10)
+                        actual_font = test_font.actual()
+                        print(f"測試字體: {font_name} -> 實際載入: {actual_font['family']}")
+                        
+                        # 檢查是否真的載入了指定的字體
+                        if actual_font['family'].lower() == font_name.lower() or 'jhenghei' in actual_font['family'].lower():
+                            print(f"✅ 使用字體: {font_name}")
+                            return font_name
+                    except Exception as e:
+                        print(f"❌ 字體 {font_name} 載入失敗: {e}")
+                        continue
+                
+                print("⚠️ 使用字體: TkDefaultFont (系統預設)")
+                return "TkDefaultFont"
+            
+            # 設定主要字體
+            self.primary_font = get_available_font()
+            self.left_font = (self.primary_font, self.left_font_size, 'normal')
+            
+            # Windows 11 統一配色方案 - 確保顏色一致性
+            colors = {
+                'bg': '#f5f5f5',           # 主背景色（統一淺灰）
+                'fg': '#323130',           # 主文字色
+                'select_bg': '#0078d4',    # 選中背景色
+                'select_fg': 'white',      # 選中文字色
+                'entry_bg': '#ffffff',     # 輸入框背景（純白）
+                'button_bg': '#f0f0f0',    # 按鈕背景（統一淺灰）
+                'button_active': '#e0e0e0', # 按鈕激活色（稍深灰）
+                'tab_bg': '#f0f0f0',       # 標籤頁背景（與按鈕一致）
+                'tab_selected_bg': '#f5f5f5', # 選中標籤頁背景（與主背景一致）
+                'frame_bg': '#f5f5f5',     # 框架背景（與主背景一致）
+                'accent': '#0078d4',       # 強調色
+                'success': '#107c10',      # 成功色
+                'warning': '#ff8c00',      # 警告色
+                'error': '#d13438',        # 錯誤色
+                'info': '#0078d4'          # 資訊色
+            }
+            
+            # 設定主視窗背景
+            self.root.configure(bg=colors['bg'])
+            
+            # 通用按鈕樣式 - 使用檢測到的字體
+            style.configure('TButton', 
+                          background=colors['button_bg'],
+                          foreground=colors['fg'],
+                          borderwidth=1,
+                          focuscolor='none',
+                          padding=(10, 8),
+                          font=(self.primary_font, 10, 'normal'),
+                          relief='flat')
+            style.map('TButton',
+                     background=[('active', colors['button_active']),
+                               ('pressed', '#c5c3c1')])
+            
+            # 輸入框樣式 - 使用檢測到的字體
+            style.configure('TEntry',
+                          fieldbackground=colors['entry_bg'],
+                          foreground=colors['fg'],
+                          borderwidth=1,
+                          insertcolor=colors['fg'],
+                          font=(self.primary_font, 10))
+            
+            # 標籤頁樣式 - 使用檢測到的字體
+            style.configure('TNotebook',
+                          background=colors['bg'],
+                          borderwidth=0,
+                          tabmargins=(2, 2, 2, 0))
+            style.configure('TNotebook.Tab',
+                          background=colors['tab_bg'],
+                          foreground=colors['fg'],
+                          padding=(14, 10),
+                          font=(self.primary_font, 10, 'normal'))
+            style.map('TNotebook.Tab',
+                     background=[('selected', colors['tab_selected_bg']),
+                               ('active', colors['button_active'])],
+                     foreground=[('selected', colors['fg']),
+                               ('active', colors['fg'])])
+            
+            # 控制按鈕專用樣式 - 使用檢測到的字體
+            style.configure('Green.TButton', 
+                          background=colors['success'], 
+                          foreground='white',
+                          padding=(12, 10),
+                          font=(self.primary_font, 10, 'bold'),
+                          relief='flat',
+                          borderwidth=0)
+            style.map('Green.TButton', 
+                     background=[('active', '#0e6e0e'), ('pressed', '#0a5a0a')])
+            
+            style.configure('Blue.TButton', 
+                          background=colors['info'], 
+                          foreground='white',
+                          padding=(12, 10),
+                          font=(self.primary_font, 10, 'bold'),
+                          relief='flat',
+                          borderwidth=0)
+            style.map('Blue.TButton', 
+                     background=[('active', '#106ebe'), ('pressed', '#0d5a9e')])
+            
+            style.configure('Orange.TButton', 
+                          background=colors['warning'], 
+                          foreground='white',
+                          padding=(12, 10),
+                          font=(self.primary_font, 10, 'bold'),
+                          relief='flat',
+                          borderwidth=0)
+            style.map('Orange.TButton', 
+                     background=[('active', '#e67e00'), ('pressed', '#cc6f00')])
+            
+            style.configure('Purple.TButton', 
+                          background='#5c2d91', 
+                          foreground='white',
+                          padding=(12, 10),
+                          font=(self.primary_font, 10, 'bold'),
+                          relief='flat',
+                          borderwidth=0)
+            style.map('Purple.TButton', 
+                     background=[('active', '#4a2568'), ('pressed', '#3d1f56')])
+            
+            style.configure('Red.TButton', 
+                          background=colors['error'], 
+                          foreground='white',
+                          padding=(12, 10),
+                          font=(self.primary_font, 10, 'bold'),
+                          relief='flat',
+                          borderwidth=0)
+            style.map('Red.TButton', 
+                     background=[('active', '#b52d30'), ('pressed', '#a0262a')])
+            
+            # Checkbutton 樣式 - 使用檢測到的字體和統一背景
+            style.configure('TCheckbutton',
+                          background=colors['frame_bg'],
+                          foreground=colors['fg'],
+                          focuscolor='none',
+                          font=(self.primary_font, 10))
+            style.map('TCheckbutton',
+                     background=[('active', colors['button_active'])])
+            
+            # LabelFrame 樣式 - 使用檢測到的字體和統一背景
+            style.configure('TLabelframe',
+                          background=colors['frame_bg'],
+                          foreground=colors['fg'],
+                          borderwidth=1,
+                          relief='solid')
+            style.configure('TLabelframe.Label',
+                          background=colors['frame_bg'],
+                          foreground=colors['fg'],
+                          font=(self.primary_font, 10, 'bold'))
+            
+            # Frame 樣式 - 統一背景色
+            style.configure('TFrame',
+                          background=colors['frame_bg'])
+            
+            # 輸入框高亮樣式
+            style.configure('Highlight.TEntry', 
+                          fieldbackground='#fff4ce',
+                          borderwidth=2)
+            
         except Exception as e:
-            print(f"樣式設定失敗: {e}")
+            print(f"Windows 11 樣式設定失敗: {e}")
+            # 設定基本字體作為備用
+            self.primary_font = "TkDefaultFont"
+            self.left_font = (self.primary_font, self.left_font_size, 'normal')
 
             # Notebook 標籤頁棕色主題
             style.configure('Brown.TNotebook', background='#efebe9', tabmargins=(4, 2, 4, 0))  # 淡棕背景
@@ -388,9 +541,6 @@ class FourCamDebugTool:
         self.var_command_choice = tk.StringVar()
         self.var_clear_output = tk.BooleanVar(value=True)  # 預設打勾
 
-        # 左側預設字體（含下拉顯示文字）
-        self.left_font = ('Microsoft JhengHei', self.left_font_size)
-
         # 檔案傳輸
         self.var_src_glob = tk.StringVar(value='/mnt/usr/*.jpg')
         self.var_dst_dir = tk.StringVar(value=str(Path('D:/VALO360/4CAM')))
@@ -415,6 +565,9 @@ class FourCamDebugTool:
         
         # 綁定視窗關閉事件
         self.root.protocol("WM_DELETE_WINDOW", self._on_closing)
+        
+        # 綁定鍵盤快捷鍵
+        self._bind_keyboard_shortcuts()
         
         # 自動嘗試連線
         self.root.after(1000, self._auto_connect)
@@ -478,9 +631,13 @@ class FourCamDebugTool:
         title_frame = ttk.Frame(scrollable_frame)
         title_frame.pack(fill=tk.X, pady=(0, 5))
         
-        self.title_label = ttk.Label(title_frame, text='4CAM DEBUG TOOL', font=('Microsoft JhengHei', 24, 'bold'))
+        # Windows 11 風格主標題 - 使用檢測到的字體
+        self.title_label = ttk.Label(title_frame, 
+                                   text='4CAM DEBUG TOOL', 
+                                   font=(self.primary_font, 22, 'bold'),
+                                   foreground='#323130')
         self.title_label.pack(side=tk.LEFT)
-        self.title_label.configure(background='lightgreen')
+        
 
         # 右側：通用按鍵
         btn_frame = ttk.Frame(title_frame)
@@ -823,6 +980,45 @@ class FourCamDebugTool:
         
         self.txt_output = ScrolledText(parent, width=50, height=30, font=('Microsoft JhengHei', self.font_size))
         self.txt_output.pack(fill=tk.BOTH, expand=True, pady=(6, 0))
+    def _build_right(self, parent: ttk.Frame) -> None:
+        # 標題 + SSH連線狀態指示器
+        top_frame = ttk.Frame(parent)
+        top_frame.pack(fill=tk.X)
+        
+        # 回傳內容標題
+        title_label = ttk.Label(top_frame, text='回傳內容', font=('Segoe UI', 12, 'bold'))
+        title_label.pack(side=tk.LEFT)
+        Tooltip(title_label, text='顯示 SSH 指令執行結果和系統訊息')
+        
+        # SSH 連線狀態指示器（靠近回傳內容文字）
+        self.status_indicator = tk.Canvas(top_frame, width=20, height=20, highlightthickness=0)
+        self.status_indicator.pack(side=tk.LEFT, padx=(8, 0))
+        self._update_connection_status('disconnected')
+        Tooltip(self.status_indicator, text='SSH 連線狀態：綠色=已連線，黃色=連線中，黑色=未連線')
+
+        # 搜尋區塊（右側）
+        search_frame = ttk.Frame(top_frame)
+        search_frame.pack(side=tk.RIGHT)
+        self.var_search = tk.StringVar()
+        self.ent_search = ttk.Entry(search_frame, textvariable=self.var_search, width=18)
+        self.ent_search.pack(side=tk.LEFT, padx=(0, 4))
+        Tooltip(self.ent_search, text='輸入要搜尋的文字，支援正則表達式')
+        
+        self.btn_search_next = ttk.Button(search_frame, text='搜尋/下一個', command=self.on_search_next)
+        self.btn_search_next.pack(side=tk.LEFT)
+        Tooltip(self.btn_search_next, text='搜尋文字並標記結果，重複點擊可找下一個')
+        
+        self.btn_search_clear = ttk.Button(search_frame, text='清除標記', command=self.on_search_clear)
+        self.btn_search_clear.pack(side=tk.LEFT, padx=(4, 0))
+        Tooltip(self.btn_search_clear, text='清除所有搜尋標記，恢復正常顯示')
+        
+        # 追蹤上一個搜尋位置
+        self._last_search_index = '1.0'
+        
+        self.txt_output = ScrolledText(parent, width=50, height=30, font=('Cascadia Code', self.font_size))
+        self.txt_output.pack(fill=tk.BOTH, expand=True, pady=(6, 0))
+        Tooltip(self.txt_output, text='SSH 指令執行結果顯示區域\n• 綠色：成功訊息\n• 紅色：錯誤訊息\n• 藍色：資訊訊息\n• 黑色：一般輸出')
+        
         # 加粗直向捲動條
         try:
             if hasattr(self.txt_output, 'vbar') and self.txt_output.vbar:
@@ -1467,8 +1663,8 @@ class FourCamDebugTool:
         
         # 如果檔案不存在，建立預設檔案
         if not path.exists():
-            self._ensure_linux_commands_file()
-            path = self._get_linux_commands_path()
+                self._ensure_linux_commands_file()
+                path = self._get_linux_commands_path()
         
         self._load_linux_commands_from_file(path)
 
@@ -1638,6 +1834,8 @@ class FourCamDebugTool:
                 <li><strong>控制按鈕組</strong>：五個不同顏色按鈕，包含說明、測試SSH、存LOG等</li>
                 <li><strong>Timeout 設定</strong>：SSH 連線逾時時間設定</li>
                 <li><strong>左右視窗分隔條</strong>：8像素粗的紅色分隔條，方便調整視窗大小</li>
+                <li><strong>鍵盤快捷鍵</strong>：F1(說明)、F5(重載)、Ctrl+L(清空)、Ctrl+S(存LOG)、Ctrl+T(測試SSH)</li>
+                <li><strong>Windows 11 風格</strong>：採用現代化配色方案和字體設計</li>
                 <li><strong>設定保存</strong>：自動保存和載入使用者設定</li>
                 <li><strong>字體調整</strong>：可調整左側、右側、彈出視窗的獨立字體大小</li>
             </ul>
@@ -2483,7 +2681,6 @@ class FourCamDebugTool:
         """更新彈出視窗的字體大小"""
         try:
             # 設定 messagebox 的字體
-            import tkinter.font as tkFont
             default_font = tkFont.nametofont("TkDefaultFont")
             default_font.configure(size=self.popup_font_size)
             
@@ -2662,6 +2859,63 @@ class FourCamDebugTool:
                 pass
         except Exception as exc:
             messagebox.showerror('錯誤', f'寫入 LOG 失敗：{exc}')
+
+
+    def _bind_keyboard_shortcuts(self) -> None:
+        """綁定鍵盤快捷鍵"""
+        try:
+            # F1: 開啟說明文件
+            self.root.bind('<F1>', lambda e: self.on_show_help())
+            
+            # F5: 重載指令表
+            self.root.bind('<F5>', lambda e: self.on_reload_commands())
+            
+            # Ctrl+L: 清空右視窗
+            self.root.bind('<Control-l>', lambda e: self.on_clear_output())
+            
+            # Ctrl+S: 存LOG
+            self.root.bind('<Control-s>', lambda e: self.on_save_log_click())
+            
+            # Ctrl+T: 測試SSH連線
+            self.root.bind('<Control-t>', lambda e: self.on_test_connection())
+            
+            # Enter: 在指令輸入框時執行指令
+            self.root.bind('<Return>', self._on_enter_key)
+            
+            # Escape: 關閉彈出視窗
+            self.root.bind('<Escape>', lambda e: self._close_popup_windows())
+            
+        except Exception as e:
+            print(f"綁定鍵盤快捷鍵失敗: {e}")
+
+    def _on_enter_key(self, event) -> None:
+        """處理 Enter 鍵按下事件"""
+        try:
+            # 檢查當前焦點在哪個輸入框
+            focused = self.root.focus_get()
+            
+            if focused == self.ent_manual_input:
+                # 手動指令輸入框：執行指令
+                self.on_execute_manual_command()
+            elif focused == self.ent_src_glob:
+                # 來源路徑輸入框：檢查檔案
+                self.on_check_files()
+            elif focused == self.ent_dst:
+                # 目標路徑輸入框：開啟資料夾
+                self.on_open_destination_folder()
+                
+        except Exception as e:
+            print(f"處理 Enter 鍵事件失敗: {e}")
+
+    def _close_popup_windows(self) -> None:
+        """關閉所有彈出視窗"""
+        try:
+            # 關閉所有 Toplevel 視窗
+            for widget in self.root.winfo_children():
+                if isinstance(widget, tk.Toplevel):
+                    widget.destroy()
+        except Exception as e:
+            print(f"關閉彈出視窗失敗: {e}")
 
 
 def main() -> None:
