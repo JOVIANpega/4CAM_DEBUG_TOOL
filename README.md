@@ -31,6 +31,9 @@
 - **指令分類管理**：使用三個專用 TXT 檔案管理不同類型指令
 - **緊湊按鈕設計**：五個不同顏色按鈕的水平緊湊排列
 - **固定路徑設計**：移除動態路徑選擇，使用固定檔案路徑提升穩定性
+- **完整除錯機制**：全域例外處理、詳細錯誤日誌、效能監控、崩潰防護
+- **模組化架構**：程式碼拆分為多個專門模組，提升維護性與穩定性
+- **智能設定管理**：自動備份設定檔、設定驗證、匯入匯出功能
 
 ## 系統需求
 - Python 3.7+
@@ -79,7 +82,11 @@ pyinstaller --onefile --noconsole --icon=assets/icon.ico main.py
 ## 檔案結構
 ```
 4CAM_DEBUG_TOOL/
-├── main.py                    # 主程式入口
+├── main.py                    # 主程式入口（重構版，約900行）
+├── main_new.py                # 新版主程式（模組化設計）
+├── debug_handler.py           # 除錯處理模組（全域例外處理、效能監控）
+├── gui_tools.py               # GUI 工具模組（Tooltip、字體管理、樣式管理）
+├── settings_manager.py        # 設定管理模組（JSON 設定檔管理）
 ├── command_loader.py          # 指令載入模組
 ├── ssh_client.py              # SSH 客戶端管理
 ├── build_exe.bat              # EXE 打包腳本（批次檔）
@@ -96,8 +103,39 @@ pyinstaller --onefile --noconsole --icon=assets/icon.ico main.py
 ├── REF/                       # 參考檔案目錄
 │   └── Command.txt           # 備用指令檔案
 ├── LOG/                       # 日誌檔案目錄
+├── BACKUP/                    # 設定檔案備份目錄
 └── dist/                      # 打包輸出目錄
 ```
+
+## 模組說明
+
+### 核心模組
+- **main.py / main_new.py**：主程式入口，處理 GUI 建構與事件處理
+- **debug_handler.py**：除錯處理模組
+  - 全域例外處理與錯誤恢復
+  - 詳細錯誤日誌記錄（LOG/ 目錄）
+  - 即時效能監控（記憶體、CPU 使用率）
+  - 使用者友善的錯誤提示
+  - 程式崩潰防護機制
+
+### GUI 工具模組
+- **gui_tools.py**：GUI 相關工具
+  - Tooltip 工具提示系統
+  - 字體管理與檢測（支援正黑體 Light 等）
+  - Windows 11 風格主題管理
+  - 鍵盤快捷鍵管理
+
+### 設定管理模組
+- **settings_manager.py**：設定檔管理
+  - JSON 設定檔讀取與儲存
+  - 設定值驗證與預設值處理
+  - 自動設定備份（BACKUP/ 目錄）
+  - 設定匯入匯出功能
+  - 設定變更通知機制
+
+### 其他模組
+- **ssh_client.py**：SSH 連線管理
+- **command_loader.py**：指令檔案載入與解析
 
 ## 指令檔案說明
 

@@ -1,0 +1,26 @@
+{
+  "window": {
+    "geometry": "1536x801+3+14",
+    "sash": 605
+  },
+  "connection": {
+    "dut_ip": "192.168.11.14",
+    "pc_ip": "192.168.11.142",
+    "username": "root",
+    "password": "",
+    "timeout": 60
+  },
+  "files": {
+    "src_glob": "/mnt/usr/*.jpg",
+    "dst_dir": "D:\\VALO360\\4CAM\\JPG"
+  },
+  "ui": {
+    "font_size": 11,
+    "left_font_size": 11,
+    "popup_font_size": 12,
+    "clear_output": true
+  },
+  "app": {
+    "version": "v1.2.1"
+  }
+}

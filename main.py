@@ -328,8 +328,8 @@ class FourCamDebugTool:
                 'entry_bg': '#ffffff',     # 輸入框背景（純白）
                 'button_bg': '#f0f0f0',    # 按鈕背景（統一淺灰）
                 'button_active': '#e0e0e0', # 按鈕激活色（稍深灰）
-                'tab_bg': '#f0f0f0',       # 標籤頁背景（與按鈕一致）
-                'tab_selected_bg': '#f5f5f5', # 選中標籤頁背景（與主背景一致）
+                'tab_bg': '#8B4513',       # 標籤頁背景（與按鈕一致）
+                'tab_selected_bg': '#A0522D', # 選中標籤頁背景（較深棕色）
                 'frame_bg': '#f5f5f5',     # 框架背景（與主背景一致）
                 'accent': '#0078d4',       # 強調色
                 'success': '#107c10',      # 成功色
@@ -374,9 +374,9 @@ class FourCamDebugTool:
                           font=(self.primary_font, 10, 'normal'))
             style.map('TNotebook.Tab',
                      background=[('selected', colors['tab_selected_bg']),
-                               ('active', colors['button_active'])],
-                     foreground=[('selected', colors['fg']),
-                               ('active', colors['fg'])])
+                               ('active', '#CD853F')],  # 深棕色懸停效果
+                     foreground=[('selected', 'white'),
+                               ('active', 'white')])
             
             # 控制按鈕專用樣式 - 使用檢測到的字體
             style.configure('Green.TButton', 
@@ -632,10 +632,11 @@ class FourCamDebugTool:
         title_frame.pack(fill=tk.X, pady=(0, 5))
         
         # Windows 11 風格主標題 - 使用檢測到的字體
-        self.title_label = ttk.Label(title_frame, 
+        self.title_label = tk.Label(title_frame, 
                                    text='4CAM DEBUG TOOL', 
-                                   font=(self.primary_font, 22, 'bold'),
-                                   foreground='#323130')
+                                   font=(self.primary_font, 24, 'bold'),
+                                   foreground='#006400',  # 深綠色文字
+                                   background='#FFFFE0')  # 淡黃色背景
         self.title_label.pack(side=tk.LEFT)
         
 
@@ -2576,9 +2577,9 @@ class FourCamDebugTool:
             
             # 強制更新所有重要元件
             try:
-                # 更新標題標籤（固定24號字體）
+                # 更新標題標籤（固定24號字體，不受左視窗字體控制）
                 if hasattr(self, 'title_label'):
-                    self.title_label.configure(font=('Microsoft JhengHei', 24, 'bold'))
+                    self.title_label.configure(font=(self.primary_font, 24, 'bold'))
                 
                 # 強制更新所有下拉選單
                 comboboxes = [

@@ -1,0 +1,45 @@
+{
+    "dut_ip": "192.168.11.143",
+    "username": "root",
+    "timeout": 30,
+    "font_size": 11,
+    "left_font_size": 11,
+    "popup_font_size": 12,
+    "clear_output": true,
+    "window_geometry": "1202x654+184+44",
+    "window_state": "normal",
+    "command_file": "COMMANDS/Command.txt",
+    "linux_file": "COMMANDS/linux.txt",
+    "download_file": "COMMANDS/download.txt",
+    "auto_connect": false,
+    "save_logs": true,
+    "max_log_files": 10,
+    "performance_monitoring": true,
+    "app_version": "v1.2.1",
+    "last_updated": "2025-09-21T18:20:48.865777",
+    "window": {
+        "geometry": "1536x801+3+14",
+        "sash": 605
+    },
+    "connection": {
+        "dut_ip": "192.168.11.14",
+        "pc_ip": "192.168.11.142",
+        "username": "root",
+        "password": "",
+        "timeout": 60
+    },
+    "files": {
+        "src_glob": "/mnt/usr/*.yuv",
+        "dst_dir": "D:\\VALO360\\4CAM\\YUV"
+    },
+    "ui": {
+        "font_size": 11,
+        "left_font_size": 11,
+        "popup_font_size": 12,
+        "clear_output": false
+    },
+    "app": {
+        "version": "v1.2.1"
+    },
+    "sash_pos": 561
+}

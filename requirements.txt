@@ -1,2 +1,3 @@
 # 4CAM_DEBUG_TOOL 依賴套件
 paramiko>=2.8.0
+psutil>=5.8.0  # 用於系統監控和效能追蹤
