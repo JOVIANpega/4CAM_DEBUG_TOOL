@@ -3,28 +3,11 @@
 
 # === 系統資訊 ===
 顯示系統資訊 = uname -a
-顯示磁碟使用量 = df -h
-顯示記憶體使用量 = free -h
 顯示目前目錄檔案 = ls -la
 列出根目錄檔案 = ls -la /
 列出使用者目錄檔案 = ls -la /mnt/usr
 網路介面資訊 = ifconfig
-網路連線狀態 = netstat -an
-路由表資訊 = route -n
 
-# === 硬體資訊 ===
-核心版本 = cat /proc/version
-CPU資訊 = cat /proc/cpuinfo
-記憶體資訊 = cat /proc/meminfo
-系統運行時間 = uptime
-系統時間 = date
-硬體時鐘 = hwclock
-掛載點 = mount
-已載入模組 = lsmod
-USB設備 = lsusb
-PCI設備 = lspci
-I2C匯流排_0 = i2cdetect -y 0
-I2C匯流排_1 = i2cdetect -y 1
 
 # === 程序管理 ===
 檢查錄影程序 = ps aux | grep hd_video
@@ -40,12 +23,6 @@ I2C匯流排_1 = i2cdetect -y 1
 刪除_var_vsp_JPG檔 = rm -f /var/vsp/*.jpg
 刪除_var_vsp_YUV檔 = rm -f /var/vsp/*.yuv
 
-# === 系統日誌 ===
-最近核心訊息 = dmesg | tail -20
-錯誤訊息過濾 = dmesg | grep -i error
-攝影機訊息過濾 = dmesg | grep -i camera
-系統負載 = cat /proc/loadavg
-
 # === 空間檢查 ===
 檢查_tmp空間 = df -h /tmp
 檢查_var_vsp空間 = df -h /var/vsp
@@ -54,3 +31,46 @@ I2C匯流排_1 = i2cdetect -y 1
 # === 系統控制 ===
 複製校準資料 = cp -prf /usr/vsp/* /var/vsp/
 系統重啟 = reboot
+
+
+# === 目錄創建指令 ===
+切換到tmp_tar目錄 = cd /tmp/tar
+創建校準目錄 = mkdir new_cal 2DLUT stitch_ecs_rgb_data Overlapslicer_output PatternChecker_output 4cam
+創建D1測試目錄 = mkdir d1_cam01 d1_cam12 d1_cam23 d1_cam30 d2_cam01 d2_cam12 d2_cam23 d2_cam30
+創建拼接區域目錄 = mkdir 1m_stitch_area_01 1m_stitch_area_12 1m_stitch_area_23 1m_stitch_area_30 1.5m_stitch_area_01 1.5m_stitch_area_12 1.5m_stitch_area_23 1.5m_stitch_area_30
+創建DRE測試目錄 = mkdir dre_off dre_on
+
+# === 檔案操作指令 ===
+解壓縮校準資料 = tar zxvf new_and_ecs.tar.gz
+移動stitch_ecs_data0 = mv stitch_ecs_rgb_data0.bin /var/vsp
+移動stitch_ecs_data1 = mv stitch_ecs_rgb_data1.bin /var/vsp
+移動stitch_ecs_data2 = mv stitch_ecs_rgb_data2.bin /var/vsp
+移動stitch_ecs_data3 = mv stitch_ecs_rgb_data3.bin /var/vsp
+刪除4cam截圖檔 = rm /mnt/usr/dump_4cam_bs_snap0.jpg
+刪除所有YUV檔 = rm dump_cam0_frm_hdr_yuv420_0.yuv dump_cam1_frm_hdr_yuv420_0.yuv dump_cam2_frm_hdr_yuv420_0.yuv dump_cam3_frm_hdr_yuv420_0.yuv
+
+# === TFTP檔案傳輸指令 ===
+下載1m_camview_anchors = tftp -gr 1m_camview_anchors.txt
+下載3m_camview_anchors = tftp -gr 3m_camview_anchors.txt
+下載5m_camview_anchors = tftp -gr 5m_camview_anchors.txt
+上傳cam0_YUV檔 = tftp -pl dump_cam0_frm_hdr_yuv420_0.yuv
+上傳cam1_YUV檔 = tftp -pl dump_cam1_frm_hdr_yuv420_0.yuv
+上傳cam2_YUV檔 = tftp -pl dump_cam2_frm_hdr_yuv420_0.yuv
+上傳cam3_YUV檔 = tftp -pl dump_cam3_frm_hdr_yuv420_0.yuv
+
+# === 批次檔案操作指令 ===
+顯示所有JPG檔 = find /mnt/usr /var/vsp -name "*.jpg" -type f
+顯示所有YUV檔 = find /mnt/usr /var/vsp -name "*.yuv" -type f
+顯示所有BIN檔 = find /var/vsp -name "*.bin" -type f
+刪除所有JPG檔 = find /mnt/usr /var/vsp -name "*.jpg" -type f -delete
+刪除所有YUV檔 = find /mnt/usr /var/vsp -name "*.yuv" -type f -delete
+刪除所有BIN檔 = find /var/vsp -name "*.bin" -type f -delete
+顯示檔案總大小 = du -sh /mnt/usr/* /var/vsp/*
+計算檔案數量 = find /mnt/usr /var/vsp -type f | wc -l
+
+# === 壓縮檔操作 ===
+創建stitching壓縮檔 = tar -czf stitching.tar.gz -C /var/vsp .
+檢查壓縮檔內容 = tar -tzf stitching.tar.gz
+解壓縮stitching檔 = tar -xzf stitching.tar.gz
+
+

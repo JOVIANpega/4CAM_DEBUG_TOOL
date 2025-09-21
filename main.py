@@ -286,12 +286,21 @@ class FourCamDebugTool:
             style.configure('Hover.TButton', background='#1976d2', foreground='white', padding=(10, 6))
             # 單一輸入框高亮樣式（淡黃色）
             style.configure('Highlight.TEntry', fieldbackground='#fff9c4')
-            # 綠色按鈕樣式（使用說明）
+            # 綠色按鈕樣式（說明文件）
             style.configure('Green.TButton', background='#4CAF50', foreground='white', padding=(10, 6))
             style.map('Green.TButton', background=[('active', '#43A047')])
-            # 藍色按鈕樣式（執行 / 執行指令 / 開始傳輸）
-            style.configure('Blue.TButton', background='#1976d2', foreground='white', padding=(10, 6))
-            style.map('Blue.TButton', background=[('active', '#1565c0')])
+            # 藍色按鈕樣式（測試SSH連線）
+            style.configure('Blue.TButton', background='#2196F3', foreground='white', padding=(10, 6))
+            style.map('Blue.TButton', background=[('active', '#1976D2')])
+            # 橙色按鈕樣式（存取LOG）
+            style.configure('Orange.TButton', background='#FF9800', foreground='white', padding=(10, 6))
+            style.map('Orange.TButton', background=[('active', '#F57C00')])
+            # 紫色按鈕樣式（重載指令表）
+            style.configure('Purple.TButton', background='#9C27B0', foreground='white', padding=(10, 6))
+            style.map('Purple.TButton', background=[('active', '#7B1FA2')])
+            # 紅色按鈕樣式（清空右視窗）
+            style.configure('Red.TButton', background='#F44336', foreground='white', padding=(10, 6))
+            style.map('Red.TButton', background=[('active', '#D32F2F')])
 
             # Checkbutton hover/選取樣式
             style.configure('Hover.TCheckbutton', background='#1565c0', foreground='white')
@@ -428,6 +437,11 @@ class FourCamDebugTool:
         # 左右可調整的分隔視窗
         self._paned = ttk.Panedwindow(self.root, orient=tk.HORIZONTAL)
         self._paned.pack(fill=tk.BOTH, expand=True)
+        
+        # 設定分隔條樣式（更粗，紅色）
+        style = ttk.Style()
+        style.configure('TPanedwindow', sashwidth=8, sashrelief=tk.RAISED)
+        style.map('TPanedwindow', sashcolor=[('active', '#FF0000'), ('!active', '#FF0000')])
 
         left = ttk.Frame(self._paned, padding=10)
         right = ttk.Frame(self._paned, padding=10)
@@ -470,26 +484,11 @@ class FourCamDebugTool:
         btn_frame = ttk.Frame(title_frame)
         btn_frame.pack(side=tk.RIGHT)
 
-        btn_help = ttk.Button(btn_frame, text='說明', command=self.on_show_help, style='Green.TButton', width=6)
-        btn_help.pack(side=tk.LEFT, padx=(0, 6))
-        Tooltip(btn_help, text='開啟使用說明文件')
-
-        btn_clear = ttk.Button(btn_frame, text='清空', command=self.on_clear_output, width=6)
-        btn_clear.pack(side=tk.LEFT, padx=(0, 6))
-        Tooltip(btn_clear, text='清空右側輸出內容')
-
-        btn_log = ttk.Button(btn_frame, text='存取LOG', command=self.on_save_log_click, width=8)
-        btn_log.pack(side=tk.LEFT)
-        Tooltip(btn_log, text='將右側輸出全部寫入 LOG/時間日期分鐘.log')
 
         # 工具列
         toolbar_frame = ttk.Frame(scrollable_frame)
         toolbar_frame.pack(fill=tk.X, pady=(0, 5))
 
-        # 左側：清空輸出勾選
-        ck_clear = ttk.Checkbutton(toolbar_frame, text='每次下指令清除舊訊息', variable=self.var_clear_output)
-        ck_clear.pack(side=tk.LEFT)
-        Tooltip(ck_clear, text='勾選後每次執行指令前會自動清空右側輸出內容')
         
         # 連線設定（保留在分頁上方）
         lf_conn = ttk.LabelFrame(scrollable_frame, text='連線設定', padding=8)
@@ -503,15 +502,8 @@ class FourCamDebugTool:
         except Exception:
             pass
         self._add_labeled_entry(lf_conn, 'Username', self.var_username, 2)
-        self._add_labeled_entry(lf_conn, 'Timeout(sec)', self.var_timeout, 3)
         btns = ttk.Frame(lf_conn)
         btns.grid(row=4, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
-        btn_test = ttk.Button(btns, text='測試', command=self.on_test_connection, width=6)
-        btn_test.pack(side=tk.LEFT)
-        Tooltip(btn_test, text='測試 SSH 連線狀態')
-        btn_reload = ttk.Button(btns, text='重載', command=self.on_reload_commands, style='Green.TButton', width=6)
-        btn_reload.pack(side=tk.LEFT, padx=6)
-        Tooltip(btn_reload, text='重新讀取 Command.txt 指令')
 
         # 全域控制已移到頂部工具列
         
@@ -749,6 +741,49 @@ class FourCamDebugTool:
         ttk.Button(popup_font_controls, text='-', width=2, command=self.on_popup_font_minus).pack(side=tk.LEFT, padx=(5, 0))
         ttk.Button(popup_font_controls, text='+', width=2, command=self.on_popup_font_plus).pack(side=tk.LEFT, padx=(2, 0))
         
+        # 按鈕組：放在左視窗最下方，標籤頁下方，用框線包起來
+        button_group_label = ttk.LabelFrame(scrollable_frame, text='控制按鈕', padding=8)
+        button_group_label.pack(fill=tk.X, pady=(10, 5))
+        
+        # 按鈕容器 - 緊湊排列
+        button_group_frame = ttk.Frame(button_group_label)
+        button_group_frame.pack(fill=tk.X)
+        
+        # 所有按鈕緊湊排列在一行
+        btn_help = ttk.Button(button_group_frame, text='說明文件', command=self.on_show_help, style='Green.TButton', width=8)
+        btn_help.pack(side=tk.LEFT, padx=(0, 2))
+        Tooltip(btn_help, text='開啟使用說明文件')
+
+        btn_test = ttk.Button(button_group_frame, text='測試SSH連線', command=self.on_test_connection, style='Blue.TButton', width=12)
+        btn_test.pack(side=tk.LEFT, padx=(0, 2))
+        Tooltip(btn_test, text='測試 SSH 連線狀態')
+
+        btn_log = ttk.Button(button_group_frame, text='存取LOG', command=self.on_save_log_click, style='Orange.TButton', width=8)
+        btn_log.pack(side=tk.LEFT, padx=(0, 2))
+        Tooltip(btn_log, text='將右側輸出全部寫入 LOG/時間日期分鐘.log')
+
+        btn_reload = ttk.Button(button_group_frame, text='重載指令表', command=self.on_reload_commands, style='Purple.TButton', width=10)
+        btn_reload.pack(side=tk.LEFT, padx=(0, 2))
+        Tooltip(btn_reload, text='重載所有命令列表')
+
+        btn_clear = ttk.Button(button_group_frame, text='清空右視窗', command=self.on_clear_output, style='Red.TButton', width=10)
+        btn_clear.pack(side=tk.LEFT, padx=(0, 2))
+        Tooltip(btn_clear, text='清空右側輸出內容')
+        
+        # 每次下指令清除舊訊息 checkbox 和 timeout 設定
+        control_frame = ttk.Frame(button_group_label)
+        control_frame.pack(fill=tk.X, pady=(8, 0))
+        
+        ck_clear = ttk.Checkbutton(control_frame, text='每次下指令清除舊訊息', variable=self.var_clear_output)
+        ck_clear.pack(side=tk.LEFT)
+        Tooltip(ck_clear, text='勾選後每次執行指令前會自動清空右側輸出內容')
+        
+        # Timeout 設定
+        ttk.Label(control_frame, text='Timeout(sec):', font=self.left_font).pack(side=tk.LEFT, padx=(20, 5))
+        ent_timeout = ttk.Entry(control_frame, textvariable=self.var_timeout, width=8, font=self.left_font)
+        ent_timeout.pack(side=tk.LEFT, padx=(0, 5))
+        ent_timeout.configure(style='Highlight.TEntry')  # 淡黃色底色
+        Tooltip(ent_timeout, text='SSH 連線逾時時間（秒）')
 
     def _build_right(self, parent: ttk.Frame) -> None:
         # 標題 + SSH連線狀態指示器
