@@ -447,53 +447,22 @@ class FourCamDebugTool:
         self.root.after(200, _apply_saved_sash)
 
     def _build_left(self, parent: ttk.Frame) -> None:
-        # 建立主容器和滾動條
+        # 建立主容器（固定，不滾動）
         main_container = ttk.Frame(parent)
         main_container.pack(fill=tk.BOTH, expand=True)
         
-        # 建立 Canvas 和滾動條
-        canvas = tk.Canvas(main_container, highlightthickness=0)
-        scrollbar = ttk.Scrollbar(main_container, orient="vertical", command=canvas.yview)
-        scrollable_frame = ttk.Frame(canvas)
+        # 直接使用 Frame，不添加滾動功能
+        scrollable_frame = ttk.Frame(main_container)
+        scrollable_frame.pack(fill=tk.BOTH, expand=True)
         
-        scrollable_frame.bind(
-            "<Configure>",
-            lambda e: canvas.configure(scrollregion=canvas.bbox("all"))
-        )
-        
-        canvas.create_window((0, 0), window=scrollable_frame, anchor="nw")
-        canvas.configure(yscrollcommand=scrollbar.set)
-        
-        # 包裝畫布和滾動條
-        canvas.pack(side="left", fill="both", expand=True)
-        scrollbar.pack(side="right", fill="y")
-        
-        # 保存 canvas 和 scrollable_frame 引用
-        self.left_canvas = canvas
+        # 保存 scrollable_frame 引用
         self.scrollable_frame = scrollable_frame
-        
-        # 綁定滑鼠滾輪事件
-        def _on_mousewheel(event):
-            canvas.yview_scroll(int(-1*(event.delta/120)), "units")
-        canvas.bind_all("<MouseWheel>", _on_mousewheel)
-        
-        # 添加滾動按鈕（位於滾動條上方）
-        scroll_buttons_frame = ttk.Frame(parent)
-        scroll_buttons_frame.pack(side="right", fill="y", padx=(0, 5))
-        
-        btn_scroll_up = ttk.Button(scroll_buttons_frame, text='↑', width=3, command=self._scroll_left_up)
-        btn_scroll_up.pack(pady=(0, 2))
-        Tooltip(btn_scroll_up, text='向上滾動')
-        
-        btn_scroll_down = ttk.Button(scroll_buttons_frame, text='↓', width=3, command=self._scroll_left_down)
-        btn_scroll_down.pack(pady=(2, 0))
-        Tooltip(btn_scroll_down, text='向下滾動')
         
         # 標題區域（移除版本設定）
         title_frame = ttk.Frame(scrollable_frame)
         title_frame.pack(fill=tk.X, pady=(0, 5))
         
-        self.title_label = ttk.Label(title_frame, text='4CAM DEBUG TOOL', font=('Microsoft JhengHei', 22, 'bold'))
+        self.title_label = ttk.Label(title_frame, text='4CAM DEBUG TOOL', font=('Microsoft JhengHei', 24, 'bold'))
         self.title_label.pack(side=tk.LEFT)
         self.title_label.configure(background='lightgreen')
 
@@ -556,8 +525,8 @@ class FourCamDebugTool:
         tab_settings = ttk.Frame(nb)
         nb.add(tab_cmd, text='指令')
         nb.add(tab_linux, text='LINUX 指令')
-        nb.add(tab_manual, text='手動指令')
         nb.add(tab_copy, text='檔案傳輸')
+        nb.add(tab_manual, text='手動指令')
         nb.add(tab_settings, text='設定')
         
         # 指令控制（放入 指令 分頁）
@@ -619,13 +588,17 @@ class FourCamDebugTool:
         manual_frame = ttk.Frame(lf_manual)
         manual_frame.grid(row=1, column=0, columnspan=2, sticky=tk.W)
         self.var_manual_input = tk.StringVar()
-        self.ent_manual_input = ttk.Entry(manual_frame, textvariable=self.var_manual_input, width=58, font=self.left_font)
-        self.ent_manual_input.pack(side=tk.LEFT)
+        self.ent_manual_input = ttk.Entry(manual_frame, textvariable=self.var_manual_input, width=50, font=self.left_font)
+        self.ent_manual_input.pack(fill=tk.X)
         self.ent_manual_input.insert(0, '輸入 Linux 指令，例如：ls -la /mnt/usr/')
         self.ent_manual_input.bind('<FocusIn>', lambda e: self.ent_manual_input.delete(0, tk.END) if self.var_manual_input.get().startswith('輸入 ') else None)
         self.ent_manual_input.bind('<Return>', lambda e: self.on_execute_manual_input())
-        btn_exec_manual = ttk.Button(manual_frame, text='執行自訂', command=self.on_execute_manual_input, style='Blue.TButton')
-        btn_exec_manual.pack(side=tk.LEFT, padx=(6, 0))
+        
+        # 按鍵放在下方
+        btn_frame = ttk.Frame(lf_manual)
+        btn_frame.grid(row=2, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
+        btn_exec_manual = ttk.Button(btn_frame, text='執行自訂', command=self.on_execute_manual_input, style='Blue.TButton')
+        btn_exec_manual.pack(side=tk.LEFT)
         Tooltip(btn_exec_manual, text='執行手動輸入的 Linux 指令')
 
         # 清理快捷（勾選多項後一次執行）
@@ -776,10 +749,6 @@ class FourCamDebugTool:
         ttk.Button(popup_font_controls, text='-', width=2, command=self.on_popup_font_minus).pack(side=tk.LEFT, padx=(5, 0))
         ttk.Button(popup_font_controls, text='+', width=2, command=self.on_popup_font_plus).pack(side=tk.LEFT, padx=(2, 0))
         
-        # 重置按鈕
-        reset_frame = ttk.Frame(lf_settings)
-        reset_frame.grid(row=5, column=0, sticky=tk.W, pady=(10, 0))
-        ttk.Button(reset_frame, text='重置為預設值', command=self.on_reset_fonts, style='Blue.TButton').pack(side=tk.LEFT)
 
     def _build_right(self, parent: ttk.Frame) -> None:
         # 標題 + SSH連線狀態指示器
@@ -1061,22 +1030,6 @@ class FourCamDebugTool:
             self.root.popup_font_size = self.popup_font_size
             self._apply_popup_font_size()
 
-    def on_reset_fonts(self) -> None:
-        """重置所有字體為預設值"""
-        self.left_font_size = 10
-        self.font_size = 12
-        self.popup_font_size = 12
-        
-        self.var_left_font_size.set(self.left_font_size)
-        self.var_right_font_size.set(self.font_size)
-        self.var_popup_font_size.set(self.popup_font_size)
-        
-        # 同步更新主視窗的 popup_font_size
-        self.root.popup_font_size = self.popup_font_size
-        
-        self._apply_left_font_size()
-        self._apply_right_font_size()
-        self._apply_popup_font_size()
 
     def on_pick_command_file(self) -> None:
         file_path = filedialog.askopenfilename(title='選擇 Command.txt', filetypes=[('Text', '*.txt'), ('All', '*.*')])
@@ -1939,21 +1892,6 @@ class FourCamDebugTool:
         except Exception:
             pass
 
-    def _scroll_left_up(self) -> None:
-        """左側視窗向上滾動"""
-        try:
-            if hasattr(self, 'left_canvas'):
-                self.left_canvas.yview_scroll(-1, "units")
-        except Exception:
-            pass
-
-    def _scroll_left_down(self) -> None:
-        """左側視窗向下滾動"""
-        try:
-            if hasattr(self, 'left_canvas'):
-                self.left_canvas.yview_scroll(1, "units")
-        except Exception:
-            pass
 
     def _on_closing(self) -> None:
         """視窗關閉時的處理"""
@@ -2371,9 +2309,9 @@ class FourCamDebugTool:
             
             # 強制更新所有重要元件
             try:
-                # 更新標題標籤（保持22號字體）
+                # 更新標題標籤（固定24號字體）
                 if hasattr(self, 'title_label'):
-                    self.title_label.configure(font=('Microsoft JhengHei', 22, 'bold'))
+                    self.title_label.configure(font=('Microsoft JhengHei', 24, 'bold'))
                 
                 # 強制更新所有下拉選單
                 comboboxes = [
