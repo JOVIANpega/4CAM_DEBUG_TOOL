@@ -34,6 +34,7 @@ import datetime
 # 本地模組
 from ssh_client import SSHClientManager
 from command_loader import load_commands_from_file, CommandItem
+from yuv_viewer import create_yuv_viewer
 
 
 class Tooltip:
@@ -369,13 +370,13 @@ class FourCamDebugTool:
                           tabmargins=(2, 2, 2, 0))
             style.configure('TNotebook.Tab',
                           background=colors['tab_bg'],
-                          foreground=colors['fg'],
+                          foreground='white',  # 初始就是白色文字
                           padding=(14, 10),
-                          font=(self.primary_font, 10, 'normal'))
+                          font=(self.primary_font, self.left_font_size, 'normal'))
             style.map('TNotebook.Tab',
                      background=[('selected', colors['tab_selected_bg']),
                                ('active', '#CD853F')],  # 深棕色懸停效果
-                     foreground=[('selected', 'white'),
+                     foreground=[('selected', 'black'),
                                ('active', 'white')])
             
             # 控制按鈕專用樣式 - 使用檢測到的字體
@@ -383,7 +384,7 @@ class FourCamDebugTool:
                           background=colors['success'], 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, 10, 'bold'),
+                          font=(self.primary_font, self.left_font_size, 'bold'),
                           relief='flat',
                           borderwidth=0)
             style.map('Green.TButton', 
@@ -393,7 +394,7 @@ class FourCamDebugTool:
                           background=colors['info'], 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, 10, 'bold'),
+                          font=(self.primary_font, self.left_font_size, 'bold'),
                           relief='flat',
                           borderwidth=0)
             style.map('Blue.TButton', 
@@ -403,7 +404,7 @@ class FourCamDebugTool:
                           background=colors['warning'], 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, 10, 'bold'),
+                          font=(self.primary_font, self.left_font_size, 'bold'),
                           relief='flat',
                           borderwidth=0)
             style.map('Orange.TButton', 
@@ -413,7 +414,7 @@ class FourCamDebugTool:
                           background='#5c2d91', 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, 10, 'bold'),
+                          font=(self.primary_font, self.left_font_size, 'bold'),
                           relief='flat',
                           borderwidth=0)
             style.map('Purple.TButton', 
@@ -423,7 +424,7 @@ class FourCamDebugTool:
                           background=colors['error'], 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, 10, 'bold'),
+                          font=(self.primary_font, self.left_font_size, 'bold'),
                           relief='flat',
                           borderwidth=0)
             style.map('Red.TButton', 
@@ -806,6 +807,10 @@ class FourCamDebugTool:
         btn_copy = ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut, style='Blue.TButton')
         btn_copy.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_copy, text='從 DUT 複製檔案到 PC')
+        
+        btn_yuv_viewer = ttk.Button(btns2, text='檢視YUV檔案', command=self.on_view_yuv_files, style='Orange.TButton')
+        btn_yuv_viewer.pack(side=tk.LEFT, padx=6)
+        Tooltip(btn_yuv_viewer, text='檢視已下載的YUV檔案')
         
         # 指令表（放入 指令表 分頁）
         lf_files = ttk.LabelFrame(tab_files, text='指令檔案管理', padding=8)
@@ -1831,12 +1836,12 @@ class FourCamDebugTool:
                 <li><strong>六標籤頁介面</strong>：DUT指令、LINUX 指令、檔案傳輸、手動指令、指令表、設定</li>
                 <li><strong>指令執行</strong>：支援預設指令、Linux 指令集和手動輸入指令</li>
                 <li><strong>檔案傳輸</strong>：使用 SCP 從 DUT 下載檔案到 PC</li>
-                <li><strong>指令表管理</strong>：統一管理所有指令檔案的開啟功能</li>
-                <li><strong>控制按鈕組</strong>：五個不同顏色按鈕，包含說明、測試SSH、存LOG等</li>
+                <li><strong>指令表管理</strong>：統一管理所有指令檔案的開啟功能（Command.txt、linux.txt、download.txt）</li>
+                <li><strong>控制按鈕組</strong>：五個不同顏色按鈕，包含說明、測試SSH、存LOG、重載指令表、清空右視窗</li>
                 <li><strong>Timeout 設定</strong>：SSH 連線逾時時間設定</li>
                 <li><strong>左右視窗分隔條</strong>：8像素粗的紅色分隔條，方便調整視窗大小</li>
                 <li><strong>鍵盤快捷鍵</strong>：F1(說明)、F5(重載)、Ctrl+L(清空)、Ctrl+S(存LOG)、Ctrl+T(測試SSH)</li>
-                <li><strong>Windows 11 風格</strong>：採用現代化配色方案和字體設計</li>
+                <li><strong>Windows 11 風格</strong>：採用現代化配色方案、深棕色TAB標籤頁、白色文字配淡黃色背景標題</li>
                 <li><strong>設定保存</strong>：自動保存和載入使用者設定</li>
                 <li><strong>字體調整</strong>：可調整左側、右側、彈出視窗的獨立字體大小</li>
             </ul>
@@ -1890,21 +1895,10 @@ class FourCamDebugTool:
             <h2>⌨️ 指令操作</h2>
             <h3>預設指令（Command.txt）：</h3>
             <ul>
-                <li>從 <code>REF/Command.txt</code> 載入預設指令</li>
+                <li>從 <code>COMMANDS/Command.txt</code> 載入預設指令</li>
                 <li>支援下拉選單選擇</li>
                 <li>指令格式：<code>指令名稱 = 完整指令</code></li>
             </ul>
-            
-            <h3>常用 Linux 指令：</h3>
-            <ul>
-                <li><code>ls -la</code>：列出檔案詳細資訊</li>
-                <li><code>ps aux</code>：顯示執行中的程序</li>
-                <li><code>df -h</code>：顯示磁碟使用量</li>
-                <li><code>free -h</code>：顯示記憶體使用量</li>
-                <li><code>top</code>：即時系統監控</li>
-                <li><code>netstat -an</code>：顯示網路連線</li>
-            </ul>
-        </div>
 
         <div class="section">
             <h2>🎛️ 介面操作</h2>
@@ -1998,6 +1992,29 @@ class FourCamDebugTool:
             self.txt_output.delete(1.0, tk.END)
             
         self._run_bg(lambda: self._task_copy_from_dut(src, dst))
+
+    def on_view_yuv_files(self) -> None:
+        """開啟 YUV 檔案檢視器"""
+        try:
+            # 檢查目標資料夾
+            dst_dir = Path(self.var_dst_dir.get().strip())
+            if not dst_dir.exists():
+                messagebox.showwarning('提醒', '目標資料夾不存在，請先設定正確的目標路徑')
+                return
+                
+            # 掃描 YUV 檔案
+            yuv_files = list(dst_dir.glob('**/*.yuv'))
+            if not yuv_files:
+                messagebox.showinfo('資訊', '目標資料夾中沒有找到 YUV 檔案')
+                return
+                
+            # 創建並開啟 YUV 檢視器
+            yuv_viewer = create_yuv_viewer(self.root, self.primary_font, self.left_font, self._append_output)
+            yuv_viewer.open_viewer(yuv_files, dst_dir)
+            
+        except Exception as e:
+            messagebox.showerror('錯誤', f'開啟 YUV 檢視器失敗：{e}')
+            self._append_output(f'❌ YUV 檢視器錯誤：{e}', 'error')
 
     def on_copy_all_from_dut(self) -> None:
         """將常用類型一次下載並分類到子資料夾。"""
