@@ -286,13 +286,14 @@ class FourCamDebugTool:
             style.configure('Hover.TButton', background='#1976d2', foreground='white', padding=(10, 6))
             # 單一輸入框高亮樣式（淡黃色）
             style.configure('Highlight.TEntry', fieldbackground='#fff9c4')
-            # 綠色按鈕樣式（說明文件）
+            
+            # 綠色按鈕樣式（說明）
             style.configure('Green.TButton', background='#4CAF50', foreground='white', padding=(10, 6))
             style.map('Green.TButton', background=[('active', '#43A047')])
-            # 藍色按鈕樣式（測試SSH連線）
+            # 藍色按鈕樣式（測試SSH）
             style.configure('Blue.TButton', background='#2196F3', foreground='white', padding=(10, 6))
             style.map('Blue.TButton', background=[('active', '#1976D2')])
-            # 橙色按鈕樣式（存取LOG）
+            # 橙色按鈕樣式（存LOG）
             style.configure('Orange.TButton', background='#FF9800', foreground='white', padding=(10, 6))
             style.map('Orange.TButton', background=[('active', '#F57C00')])
             # 紫色按鈕樣式（重載指令表）
@@ -307,6 +308,8 @@ class FourCamDebugTool:
             style.map('Hover.TCheckbutton',
                       background=[('active', '#1565c0'), ('selected', '#1565c0')],
                       foreground=[('active', 'white'), ('selected', 'white')])
+        except Exception as e:
+            print(f"樣式設定失敗: {e}")
 
             # Notebook 標籤頁棕色主題
             style.configure('Brown.TNotebook', background='#efebe9', tabmargins=(4, 2, 4, 0))  # 淡棕背景
@@ -382,7 +385,6 @@ class FourCamDebugTool:
         self.var_password = tk.StringVar(value='')  # 保留但不使用
 
         # 指令相關
-        self.var_command_file = tk.StringVar(value=str(Path('REF') / 'Command.txt'))
         self.var_command_choice = tk.StringVar()
         self.var_clear_output = tk.BooleanVar(value=True)  # 預設打勾
 
@@ -514,22 +516,18 @@ class FourCamDebugTool:
         tab_linux = ttk.Frame(nb)
         tab_manual = ttk.Frame(nb)
         tab_copy = ttk.Frame(nb)
+        tab_files = ttk.Frame(nb)
         tab_settings = ttk.Frame(nb)
-        nb.add(tab_cmd, text='指令')
+        nb.add(tab_cmd, text='DUT指令')
         nb.add(tab_linux, text='LINUX 指令')
         nb.add(tab_copy, text='檔案傳輸')
         nb.add(tab_manual, text='手動指令')
+        nb.add(tab_files, text='指令表')
         nb.add(tab_settings, text='設定')
         
         # 指令控制（放入 指令 分頁）
-        lf_cmd = ttk.LabelFrame(tab_cmd, text='指令控制（Command.txt）', padding=8)
+        lf_cmd = ttk.LabelFrame(tab_cmd, text='指令控制（COMMANDS/Command.txt）', padding=8)
         lf_cmd.pack(fill=tk.X, pady=(6, 6))
-        ttk.Label(lf_cmd, text='指令檔', font=self.left_font).grid(row=0, column=0, sticky=tk.W)
-        self.ent_cmdfile = ttk.Entry(lf_cmd, textvariable=self.var_command_file, width=42, font=self.left_font)
-        self.ent_cmdfile.grid(row=0, column=1, sticky=tk.W, padx=(6, 0))
-        btn_pick_cmd = ttk.Button(lf_cmd, text='選擇', command=self.on_pick_command_file)
-        btn_pick_cmd.grid(row=0, column=2, padx=(6, 0))
-        Tooltip(btn_pick_cmd, text='選擇 Command.txt 檔案')
         
         ttk.Label(lf_cmd, text='指令選擇', font=self.left_font).grid(row=1, column=0, sticky=tk.W, pady=(6, 0))
         self.cbo_commands = ttk.Combobox(lf_cmd, textvariable=self.var_command_choice, width=50, state='readonly', font=self.left_font)
@@ -539,9 +537,6 @@ class FourCamDebugTool:
         
         btn_frame = ttk.Frame(lf_cmd)
         btn_frame.grid(row=2, column=0, columnspan=3, sticky=tk.E, pady=(6, 0))
-        btn_open_cmd = ttk.Button(btn_frame, text='開啟指令表', command=self.on_open_command_file)
-        btn_open_cmd.pack(side=tk.RIGHT, padx=(6, 0))
-        Tooltip(btn_open_cmd, text='以系統預設編輯器開啟 Command.txt')
         btn_exec_cmd = ttk.Button(btn_frame, text='執行指令', command=self.on_execute_selected_command, style='Blue.TButton')
         btn_exec_cmd.pack(side=tk.RIGHT)
         Tooltip(btn_exec_cmd, text='執行上方選取的指令')
@@ -552,23 +547,14 @@ class FourCamDebugTool:
         lf_linux = ttk.LabelFrame(tab_linux, text='Linux 指令集', padding=8)
         lf_linux.pack(fill=tk.X)
         
-        # 指令檔案路徑
-        linux_file_frame = ttk.Frame(lf_linux)
-        linux_file_frame.grid(row=0, column=0, columnspan=3, sticky=tk.W, pady=(0, 6))
-        ttk.Label(linux_file_frame, text='指令檔案', font=self.left_font).pack(side=tk.LEFT)
-        self.var_linux_file = tk.StringVar(value=str(Path('COMMANDS') / 'linux.txt'))
-        self.ent_linux_file = ttk.Entry(linux_file_frame, textvariable=self.var_linux_file, width=30, font=self.left_font)
-        self.ent_linux_file.pack(side=tk.LEFT, padx=(6, 0))
-        btn_open_linux = ttk.Button(linux_file_frame, text='開啟指令表', command=lambda: self._open_file_path(self.var_linux_file.get()))
-        btn_open_linux.pack(side=tk.LEFT, padx=(6, 0))
-        Tooltip(btn_open_linux, text='以系統預設程式開啟指令檔')
-        
+        # Linux 指令下拉選單
         self.var_linux_choice = tk.StringVar()
         self.cbo_linux = ttk.Combobox(lf_linux, textvariable=self.var_linux_choice, values=[], width=47, state='readonly', font=self.left_font)
-        self.cbo_linux.grid(row=1, column=0, padx=(0, 6))
+        self.cbo_linux.grid(row=0, column=0, padx=(0, 6), pady=(6, 0))
         Tooltip(self.cbo_linux, text='選擇要執行的 Linux 指令', min_length=1)
+        
         btn_exec_linux = ttk.Button(lf_linux, text='執行', command=self.on_execute_linux, style='Blue.TButton')
-        btn_exec_linux.grid(row=1, column=1)
+        btn_exec_linux.grid(row=0, column=1, padx=(6, 0), pady=(6, 0))
         Tooltip(btn_exec_linux, text='執行常用 Linux 指令')
         self.root.after(100, self._load_linux_commands)
 
@@ -649,25 +635,42 @@ class FourCamDebugTool:
         entry_frame.grid(row=2, column=1, sticky=tk.W, padx=(6, 0))
         self.ent_dst = ttk.Entry(entry_frame, textvariable=self.var_dst_dir, width=42, font=self.left_font)
         self.ent_dst.pack(side=tk.LEFT)
-        btn_open_dst = ttk.Button(entry_frame, text='📁', command=self.on_open_destination_folder, width=3)
+        btn_open_dst = ttk.Button(entry_frame, text='開啟目標資料夾', command=self.on_open_destination_folder, width=12)
         btn_open_dst.pack(side=tk.LEFT, padx=(6, 0))
         Tooltip(btn_open_dst, text='開啟目標資料夾')
         
         btns2 = ttk.Frame(lf_copy)
         btns2.grid(row=3, column=0, columnspan=2, sticky=tk.W, pady=(6, 0))
         # 使用說明已移到全域頂部
-        btn_open_commands = ttk.Button(btns2, text='開啟指令表', command=self.on_open_command_files)
-        btn_open_commands.pack(side=tk.LEFT)
-        Tooltip(btn_open_commands, text='開啟 download.txt 指令檔案')
         btn_copy_all = ttk.Button(btns2, text='將DUT所有資料下載到PC', command=self.on_copy_all_from_dut)
-        btn_copy_all.pack(side=tk.LEFT, padx=6)
+        btn_copy_all.pack(side=tk.LEFT)
         Tooltip(btn_copy_all, text='依常用類型一次下載並自動分類到 JPG/YUV/BIN/CONFIG/LOG')
         btn_copy = ttk.Button(btns2, text='開始傳輸', command=self.on_copy_from_dut, style='Blue.TButton')
         btn_copy.pack(side=tk.LEFT, padx=6)
         Tooltip(btn_copy, text='從 DUT 複製檔案到 PC')
         
+        # 指令表（放入 指令表 分頁）
+        lf_files = ttk.LabelFrame(tab_files, text='指令檔案管理', padding=8)
+        lf_files.pack(fill=tk.X, pady=(6, 6))
+        
+        # 指令表按鈕組
+        files_buttons_frame = ttk.Frame(lf_files)
+        files_buttons_frame.pack(fill=tk.X, pady=(10, 0))
+        
+        btn_open_cmd = ttk.Button(files_buttons_frame, text='開啟 Command.txt', command=self.on_open_command_file, style='Blue.TButton', width=15)
+        btn_open_cmd.pack(side=tk.LEFT, padx=(0, 6))
+        Tooltip(btn_open_cmd, text='以系統預設編輯器開啟 Command.txt')
+        
+        btn_open_linux = ttk.Button(files_buttons_frame, text='開啟 linux.txt', command=self.on_open_linux_file, style='Blue.TButton', width=15)
+        btn_open_linux.pack(side=tk.LEFT, padx=(0, 6))
+        Tooltip(btn_open_linux, text='以系統預設程式開啟 linux.txt')
+        
+        btn_open_download = ttk.Button(files_buttons_frame, text='開啟 download.txt', command=self.on_open_command_files, style='Blue.TButton', width=15)
+        btn_open_download.pack(side=tk.LEFT, padx=(0, 6))
+        Tooltip(btn_open_download, text='開啟 download.txt 指令檔案')
+        
         # 套用字體
-        for child in lf_conn.winfo_children() + lf_cmd.winfo_children() + lf_linux.winfo_children() + lf_manual.winfo_children() + lf_copy.winfo_children():
+        for child in lf_conn.winfo_children() + lf_cmd.winfo_children() + lf_linux.winfo_children() + lf_manual.winfo_children() + lf_copy.winfo_children() + lf_files.winfo_children():
             try:
                 child.configure(font=self.left_font)
             except Exception:
@@ -745,28 +748,35 @@ class FourCamDebugTool:
         button_group_label = ttk.LabelFrame(scrollable_frame, text='控制按鈕', padding=8)
         button_group_label.pack(fill=tk.X, pady=(10, 5))
         
-        # 按鈕容器 - 緊湊排列
+        # 按鈕容器 - 上下兩排佈局
         button_group_frame = ttk.Frame(button_group_label)
         button_group_frame.pack(fill=tk.X)
         
-        # 所有按鈕緊湊排列在一行
-        btn_help = ttk.Button(button_group_frame, text='說明文件', command=self.on_show_help, style='Green.TButton', width=8)
+        # 上排：說明、測試SSH、重載指令表
+        top_frame = ttk.Frame(button_group_frame)
+        top_frame.pack(fill=tk.X, pady=(0, 4))
+        
+        btn_help = ttk.Button(top_frame, text='說明', command=self.on_show_help, style='Green.TButton')
         btn_help.pack(side=tk.LEFT, padx=(0, 2))
         Tooltip(btn_help, text='開啟使用說明文件')
 
-        btn_test = ttk.Button(button_group_frame, text='測試SSH連線', command=self.on_test_connection, style='Blue.TButton', width=12)
+        btn_test = ttk.Button(top_frame, text='測試SSH', command=self.on_test_connection, style='Blue.TButton')
         btn_test.pack(side=tk.LEFT, padx=(0, 2))
         Tooltip(btn_test, text='測試 SSH 連線狀態')
 
-        btn_log = ttk.Button(button_group_frame, text='存取LOG', command=self.on_save_log_click, style='Orange.TButton', width=8)
+        btn_reload = ttk.Button(top_frame, text='重載指令表', command=self.on_reload_commands, style='Purple.TButton')
+        btn_reload.pack(side=tk.LEFT, padx=(0, 2))
+        Tooltip(btn_reload, text='重載所有命令列表')
+        
+        # 下排：存LOG、清空右視窗
+        bottom_frame = ttk.Frame(button_group_frame)
+        bottom_frame.pack(fill=tk.X)
+
+        btn_log = ttk.Button(bottom_frame, text='存LOG', command=self.on_save_log_click, style='Orange.TButton')
         btn_log.pack(side=tk.LEFT, padx=(0, 2))
         Tooltip(btn_log, text='將右側輸出全部寫入 LOG/時間日期分鐘.log')
 
-        btn_reload = ttk.Button(button_group_frame, text='重載指令表', command=self.on_reload_commands, style='Purple.TButton', width=10)
-        btn_reload.pack(side=tk.LEFT, padx=(0, 2))
-        Tooltip(btn_reload, text='重載所有命令列表')
-
-        btn_clear = ttk.Button(button_group_frame, text='清空右視窗', command=self.on_clear_output, style='Red.TButton', width=10)
+        btn_clear = ttk.Button(bottom_frame, text='清空右視窗', command=self.on_clear_output, style='Red.TButton')
         btn_clear.pack(side=tk.LEFT, padx=(0, 2))
         Tooltip(btn_clear, text='清空右側輸出內容')
         
@@ -904,7 +914,7 @@ class FourCamDebugTool:
 
     # ---------- 指令載入 ----------
     def _load_commands_initial(self) -> None:
-        path = Path(self.var_command_file.get())
+        path = Path(get_resource_path('COMMANDS/Command.txt'))
         self._load_commands_from(path)
 
     # ---------- 設定檔案 ----------
@@ -937,11 +947,8 @@ class FourCamDebugTool:
                 # 載入檔案設定
                 if 'files' in settings:
                     files = settings['files']
-                    self.var_command_file.set(files.get('command_file', str(Path('REF') / 'Command.txt')))
                     self.var_src_glob.set(files.get('src_glob', '/mnt/usr/*.jpg'))
                     self.var_dst_dir.set(files.get('dst_dir', str(Path('D:/VALO360/4CAM'))))
-                    # 載入 Linux 指令檔案設定（延遲到 UI 建立後）
-                    self._linux_file_setting = files.get('linux_file', str(Path('COMMANDS') / 'linux.txt'))
                 # 載入應用版本
                 if 'app' in settings:
                     app_cfg = settings['app']
@@ -990,10 +997,8 @@ class FourCamDebugTool:
                     'timeout': int(self.var_timeout.get() or '60')
                 },
                 'files': {
-                    'command_file': self.var_command_file.get(),
                     'src_glob': self.var_src_glob.get(),
-                    'dst_dir': self.var_dst_dir.get(),
-                    'linux_file': self.var_linux_file.get() if hasattr(self, 'var_linux_file') else str(Path('COMMANDS') / 'linux.txt')
+                    'dst_dir': self.var_dst_dir.get()
                 },
                 'ui': {
                     'font_size': self.font_size,
@@ -1073,17 +1078,28 @@ class FourCamDebugTool:
             self._load_commands_from(Path(file_path))
 
 
-    def on_pick_linux_file(self) -> None:
-        """選擇指令檔案並立刻更新"""
-        file_path = filedialog.askopenfilename(title='選擇指令檔案', filetypes=[('Text', '*.txt'), ('All', '*.*')])
-        if file_path:
-            self.var_linux_file.set(file_path)
-            # 立刻更新指令
-            self._load_linux_commands_from_file(Path(file_path))
-            # 強制更新 UI
-            self.root.update_idletasks()
-            # 顯示確認訊息
-            self._append_output(f'已選擇指令檔案：{file_path}', 'info')
+    def on_open_linux_file(self) -> None:
+        """開啟 linux.txt 指令檔案"""
+        try:
+            file_path = Path(get_resource_path('COMMANDS/linux.txt'))
+            
+            if file_path.exists():
+                import subprocess
+                import os
+                import platform
+                
+                if platform.system() == 'Windows':
+                    os.startfile(str(file_path))
+                elif platform.system() == 'Darwin':  # macOS
+                    subprocess.run(['open', str(file_path)])
+                else:  # Linux
+                    subprocess.run(['xdg-open', str(file_path)])
+                    
+                self._append_output(f'已開啟 linux.txt：{file_path}', 'info')
+            else:
+                messagebox.showwarning('提醒', f'linux.txt 檔案不存在：{file_path}')
+        except Exception as e:
+            self._append_output(f'無法開啟 linux.txt：{e}', 'error')
 
     def on_execute_cleanup(self) -> None:
         """執行 Linux TAB 內勾選的清理刪除指令。"""
@@ -1109,19 +1125,19 @@ class FourCamDebugTool:
 
     def on_open_command_file(self) -> None:
         """開啟指令表檔案"""
-        command_file = self.var_command_file.get()
-        if command_file and Path(command_file).exists():
+        command_file = Path(get_resource_path('COMMANDS/Command.txt'))
+        if command_file.exists():
             try:
                 # 使用系統預設程式開啟檔案
                 import subprocess
                 import platform
                 
                 if platform.system() == 'Windows':
-                    os.startfile(command_file)
+                    os.startfile(str(command_file))
                 elif platform.system() == 'Darwin':  # macOS
-                    subprocess.run(['open', command_file])
+                    subprocess.run(['open', str(command_file)])
                 else:  # Linux
-                    subprocess.run(['xdg-open', command_file])
+                    subprocess.run(['xdg-open', str(command_file)])
                     
                 self._append_output(f'已開啟指令表：{command_file}', 'info')
             except Exception as e:
@@ -1151,19 +1167,45 @@ class FourCamDebugTool:
             self._append_output(f'無法開啟檔案：{e}', 'error')
 
     def on_reload_commands(self, *_args) -> None:
-        # 重新載入 Command.txt 與 Linux 指令檔，無需重啟 GUI
+        # 重新載入所有指令檔案：Command.txt、linux.txt、download.txt
+        reload_success = []
+        reload_failed = []
+        
         try:
-            cmd_path = Path(self.var_command_file.get()) if hasattr(self, 'var_command_file') else Path('COMMANDS') / 'Command.txt'
+            cmd_path = Path(get_resource_path('COMMANDS/Command.txt'))
             self._load_commands_from(cmd_path)
+            reload_success.append('Command.txt')
         except Exception as e:
-            self._append_output(f'重新載入 Command.txt 失敗：{e}', 'error')
+            reload_failed.append(f'Command.txt: {e}')
+            
         try:
-            linux_path = Path(self.var_linux_file.get()) if hasattr(self, 'var_linux_file') else Path('COMMANDS') / 'linux.txt'
+            linux_path = Path(get_resource_path('COMMANDS/linux.txt'))
             self._load_linux_commands_from_file(linux_path)
+            reload_success.append('linux.txt')
         except Exception as e:
-            self._append_output(f'重新載入 linux 指令檔失敗：{e}', 'error')
-        else:
-            self._append_output('✅ 已重新載入所有指令來源（Command 與 Linux）', 'success')
+            reload_failed.append(f'linux.txt: {e}')
+            
+        try:
+            download_path = Path(get_resource_path('COMMANDS/download.txt'))
+            # 檢查 download.txt 是否存在並可讀取
+            if download_path.exists():
+                with open(download_path, 'r', encoding='utf-8') as f:
+                    content = f.read()
+                    if content.strip():
+                        reload_success.append('download.txt')
+                    else:
+                        reload_failed.append('download.txt: 檔案為空')
+            else:
+                reload_failed.append('download.txt: 檔案不存在')
+        except Exception as e:
+            reload_failed.append(f'download.txt: {e}')
+        
+        # 顯示重載結果
+        if reload_success:
+            self._append_output(f'✅ 成功重新載入：{", ".join(reload_success)}', 'success')
+        if reload_failed:
+            for failed in reload_failed:
+                self._append_output(f'❌ 重新載入失敗：{failed}', 'error')
 
     def on_command_selected(self, _evt) -> None:
         idx = self.cbo_commands.current()
@@ -1420,27 +1462,13 @@ class FourCamDebugTool:
 
     def _load_linux_commands(self) -> None:
         """讀取預設的 Linux 指令檔案並更新下拉顯示（含編號）。"""
-        # 確保 var_linux_file 變數存在
-        if not hasattr(self, 'var_linux_file'):
-            # 使用暫存的設定或預設值
-            default_path = getattr(self, '_linux_file_setting', str(Path('COMMANDS') / 'linux.txt'))
-            self.var_linux_file = tk.StringVar(value=default_path)
+        # 使用打包後的檔案路徑
+        path = Path(get_resource_path('COMMANDS/linux.txt'))
         
-        # 使用變數中指定的檔案路徑
-        linux_file_path = self.var_linux_file.get()
-        path = Path(linux_file_path)
-        
-        # 如果檔案不存在，嘗試使用預設路徑
+        # 如果檔案不存在，建立預設檔案
         if not path.exists():
-            default_path = self._get_linux_commands_path()
-            if default_path.exists():
-                path = default_path
-                self.var_linux_file.set(str(path))
-            else:
-                # 建立預設檔案
-                self._ensure_linux_commands_file()
-                path = self._get_linux_commands_path()
-                self.var_linux_file.set(str(path))
+            self._ensure_linux_commands_file()
+            path = self._get_linux_commands_path()
         
         self._load_linux_commands_from_file(path)
 
@@ -1602,11 +1630,16 @@ class FourCamDebugTool:
         <div class="section">
             <h2>🔧 主要功能</h2>
             <ul>
-                <li><strong>SSH 連線管理</strong>：自動連線到 DUT 設備</li>
-                <li><strong>指令執行</strong>：支援預設指令和常用 Linux 指令</li>
+                <li><strong>SSH 連線管理</strong>：自動連線到 DUT 設備，支援連線狀態指示器</li>
+                <li><strong>六標籤頁介面</strong>：DUT指令、LINUX 指令、檔案傳輸、手動指令、指令表、設定</li>
+                <li><strong>指令執行</strong>：支援預設指令、Linux 指令集和手動輸入指令</li>
                 <li><strong>檔案傳輸</strong>：使用 SCP 從 DUT 下載檔案到 PC</li>
+                <li><strong>指令表管理</strong>：統一管理所有指令檔案的開啟功能</li>
+                <li><strong>控制按鈕組</strong>：五個不同顏色按鈕，包含說明、測試SSH、存LOG等</li>
+                <li><strong>Timeout 設定</strong>：SSH 連線逾時時間設定</li>
+                <li><strong>左右視窗分隔條</strong>：8像素粗的紅色分隔條，方便調整視窗大小</li>
                 <li><strong>設定保存</strong>：自動保存和載入使用者設定</li>
-                <li><strong>字體調整</strong>：可調整介面字體大小</li>
+                <li><strong>字體調整</strong>：可調整左側、右側、彈出視窗的獨立字體大小</li>
             </ul>
         </div>
 
@@ -1614,9 +1647,10 @@ class FourCamDebugTool:
             <h2>🚀 快速開始</h2>
             <ol>
                 <li><strong>啟動程式</strong>：執行 <code>python main.py</code> 或雙擊 EXE 檔案</li>
-                <li><strong>檢查連線</strong>：程式會自動嘗試連線到 DUT</li>
-                <li><strong>執行指令</strong>：選擇指令並點擊「執行指令」</li>
+                <li><strong>檢查連線</strong>：程式會自動嘗試連線到 DUT（預設 IP：192.168.11.143）</li>
+                <li><strong>執行指令</strong>：在各個標籤頁選擇指令並點擊「執行」</li>
                 <li><strong>檔案傳輸</strong>：設定來源和目標路徑，點擊「開始傳輸」</li>
+                <li><strong>指令表管理</strong>：在「指令表」標籤頁開啟各種指令檔案進行編輯</li>
             </ol>
         </div>
 
@@ -2362,8 +2396,7 @@ class FourCamDebugTool:
                 
                 # 強制更新所有輸入欄位
                 entries = [
-                    'ent_version', 'ent_cmdfile', 'ent_linux_file', 'ent_manual_input',
-                    'ent_dst', 'ent_search'
+                    'ent_version', 'ent_manual_input', 'ent_dst', 'ent_search'
                 ]
                 for ent_name in entries:
                     if hasattr(self, ent_name):

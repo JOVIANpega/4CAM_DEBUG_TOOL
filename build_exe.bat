@@ -91,16 +91,37 @@ if exist "dist\%EXE_NAME%.exe" (
     echo Copying resource directories...
     if exist "COMMANDS" (
         if exist "dist\COMMANDS" rmdir /s /q "dist\COMMANDS"
-        xcopy "COMMANDS" "dist\COMMANDS" /E /I /Q /Y
-        echo - COMMANDS directory copied
+        echo Copying COMMANDS directory...
+        xcopy "COMMANDS" "dist\COMMANDS" /E /I /Y
+        if errorlevel 1 (
+            echo Error: Failed to copy COMMANDS directory
+        ) else (
+            echo - COMMANDS directory copied successfully
+        )
+    ) else (
+        echo Warning: COMMANDS directory not found
     )
     if exist "REF" (
-        xcopy "REF" "dist\REF" /E /I /Q
-        echo - REF directory copied
+        echo Copying REF directory...
+        xcopy "REF" "dist\REF" /E /I /Y
+        if errorlevel 1 (
+            echo Error: Failed to copy REF directory
+        ) else (
+            echo - REF directory copied successfully
+        )
+    ) else (
+        echo Warning: REF directory not found
     )
     if exist "assets" (
-        xcopy "assets" "dist\assets" /E /I /Q
-        echo - assets directory copied
+        echo Copying assets directory...
+        xcopy "assets" "dist\assets" /E /I /Y
+        if errorlevel 1 (
+            echo Error: Failed to copy assets directory
+        ) else (
+            echo - assets directory copied successfully
+        )
+    ) else (
+        echo Warning: assets directory not found
     )
 
     REM Copy settings.json
@@ -119,6 +140,15 @@ if exist "dist\%EXE_NAME%.exe" (
     echo dist directory contents:
     dir "dist" /B
     echo.
+    
+    REM Verify COMMANDS directory was copied
+    if exist "dist\COMMANDS" (
+        echo COMMANDS directory verification:
+        dir "dist\COMMANDS" /B
+        echo.
+    ) else (
+        echo ERROR: COMMANDS directory not found in dist!
+    )
     
     REM Ask to open folder
     set /p choice="Open dist folder? (Y/N): "
