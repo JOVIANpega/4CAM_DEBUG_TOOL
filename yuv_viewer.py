@@ -221,16 +221,27 @@ class YUVViewer:
         control_frame = ttk.LabelFrame(main_frame, text='控制選項', padding=10)
         control_frame.pack(fill=tk.X, pady=(0, 15))
         
-        # 第一行：解析度選擇
+        # 第一行：解析度與像素格式選擇
         row1_frame = ttk.Frame(control_frame)
         row1_frame.pack(fill=tk.X, pady=(0, 10))
         
         ttk.Label(row1_frame, text='解析度：', font=self.left_font).pack(side=tk.LEFT)
         resolution_var = tk.StringVar(value='1920x1080')
         resolution_combo = ttk.Combobox(row1_frame, textvariable=resolution_var, 
-                                       values=['1920x1080', '1280x720', '640x480', '320x240', '3840x2160'], 
+                                       values=['3840x2160', '2560x1440', '1920x1080', '1600x900', '1280x720', '1024x768', '800x600', '640x480', '320x240'], 
                                        state='readonly', width=12, font=self.left_font)
-        resolution_combo.pack(side=tk.LEFT, padx=(5, 20))
+        resolution_combo.pack(side=tk.LEFT, padx=(5, 12))
+
+        ttk.Label(row1_frame, text='像素格式：', font=self.left_font).pack(side=tk.LEFT)
+        pixel_format_var = tk.StringVar(value='yuv420p')
+        pixel_format_combo = ttk.Combobox(row1_frame, textvariable=pixel_format_var,
+                                         values=['yuv420p', 'nv12', 'yuv422p', 'yuyv422'],
+                                         state='readonly', width=10, font=self.left_font)
+        pixel_format_combo.pack(side=tk.LEFT, padx=(5, 12))
+
+        auto_try_var = tk.BooleanVar(value=True)
+        chk_auto_try = ttk.Checkbutton(row1_frame, text='自動嘗試常見解析度', variable=auto_try_var)
+        chk_auto_try.pack(side=tk.LEFT)
         
         # 第二行：按鈕
         row2_frame = ttk.Frame(control_frame)
@@ -238,12 +249,12 @@ class YUVViewer:
         
         # 預覽按鈕
         btn_preview = ttk.Button(row2_frame, text='預覽 YUV', 
-                                command=lambda: self._preview_yuv_file(yuv_files, file_listbox, resolution_var))
+                                command=lambda: self._preview_yuv_file(yuv_files, file_listbox, resolution_var, pixel_format_var, auto_try_var))
         btn_preview.pack(side=tk.LEFT, padx=(0, 10))
         
         # 轉換按鈕
         btn_convert = ttk.Button(row2_frame, text='轉換為 JPG', 
-                                command=lambda: self._convert_yuv_to_jpg(yuv_files, file_listbox, resolution_var, base_dir))
+                                command=lambda: self._convert_yuv_to_jpg(yuv_files, file_listbox, resolution_var, pixel_format_var, auto_try_var, base_dir))
         btn_convert.pack(side=tk.LEFT, padx=(0, 10))
         
         # 批次轉換按鈕
@@ -285,7 +296,7 @@ class YUVViewer:
         y = (yuv_window.winfo_screenheight() // 2) - (yuv_window.winfo_height() // 2)
         yuv_window.geometry(f"+{x}+{y}")
     
-    def _preview_yuv_file(self, yuv_files: List[Path], file_listbox: tk.Listbox, resolution_var: tk.StringVar):
+    def _preview_yuv_file(self, yuv_files: List[Path], file_listbox: tk.Listbox, resolution_var: tk.StringVar, pixel_format_var: tk.StringVar, auto_try_var: tk.BooleanVar):
         """預覽選中的 YUV 檔案"""
         if not self._check_ffmpeg_available():
             return
@@ -299,6 +310,7 @@ class YUVViewer:
             selected_file = yuv_files[selection[0]]
             resolution = resolution_var.get()
             width, height = resolution.split('x')
+            pix_fmt = pixel_format_var.get()
             
             # 構建 FFplay 指令
             if self.ffmpeg_path == 'system':
@@ -308,7 +320,7 @@ class YUVViewer:
             
             cmd.extend([
                 '-f', 'rawvideo', 
-                '-pixel_format', 'yuv420p',
+                '-pixel_format', pix_fmt,
                 '-video_size', f'{width}x{height}',
                 '-i', str(selected_file),
                 '-window_title', f'YUV 預覽 - {selected_file.name}'
@@ -323,7 +335,7 @@ class YUVViewer:
             self.append_output(f'❌ YUV 預覽失敗：{e}', 'error')
     
     def _convert_yuv_to_jpg(self, yuv_files: List[Path], file_listbox: tk.Listbox, 
-                           resolution_var: tk.StringVar, base_dir: Path):
+                           resolution_var: tk.StringVar, pixel_format_var: tk.StringVar, auto_try_var: tk.BooleanVar, base_dir: Path):
         """將選中的 YUV 檔案轉換為 JPG"""
         if not self._check_ffmpeg_available():
             return
@@ -337,6 +349,7 @@ class YUVViewer:
             selected_file = yuv_files[selection[0]]
             resolution = resolution_var.get()
             width, height = resolution.split('x')
+            pix_fmt = pixel_format_var.get()
             
             # 創建輸出檔案路徑
             output_file = selected_file.with_suffix('.jpg')
@@ -349,7 +362,7 @@ class YUVViewer:
             
             cmd.extend([
                 '-f', 'rawvideo',
-                '-pixel_format', 'yuv420p',
+                '-pixel_format', pix_fmt,
                 '-video_size', f'{width}x{height}',
                 '-i', str(selected_file),
                 '-y',  # 覆蓋輸出檔案
@@ -362,8 +375,28 @@ class YUVViewer:
             self.append_output(f'✅ YUV 轉換成功：{output_file.name}')
             
         except subprocess.CalledProcessError as e:
-            messagebox.showerror('錯誤', f'轉換失敗：{e.stderr}')
-            self.append_output(f'❌ YUV 轉換失敗：{e.stderr}', 'error')
+            # 若啟用自動嘗試，依序嘗試常見解析度與像素格式
+            if auto_try_var.get():
+                try_resolutions = ['1920x1080', '1280x720', '640x480']
+                try_pixfmts = ['yuv420p', 'nv12', 'yuv422p']
+                tried = []
+                for res in try_resolutions:
+                    w, h = res.split('x')
+                    for pf in try_pixfmts:
+                        tried.append(f"{res}/{pf}")
+                        try_cmd = cmd[:1] + ['-f', 'rawvideo', '-pixel_format', pf, '-video_size', f'{w}x{h}', '-i', str(selected_file), '-y', str(output_file)]
+                        try:
+                            subprocess.run(try_cmd, capture_output=True, text=True, check=True)
+                            messagebox.showinfo('成功', f'轉換完成（自動嘗試 {res}/{pf}）：{output_file.name}')
+                            self.append_output(f'✅ 自動嘗試成功：{selected_file.name} -> {output_file.name} 使用 {res}/{pf}')
+                            return
+                        except subprocess.CalledProcessError:
+                            continue
+                messagebox.showerror('錯誤', f'轉換失敗，已嘗試：{", ".join(tried)}\n原始錯誤：{e.stderr}')
+                self.append_output(f'❌ YUV 轉換失敗（已自動嘗試多組參數）：{e.stderr}', 'error')
+            else:
+                messagebox.showerror('錯誤', f'轉換失敗：{e.stderr}')
+                self.append_output(f'❌ YUV 轉換失敗：{e.stderr}', 'error')
         except Exception as e:
             messagebox.showerror('錯誤', f'轉換失敗：{e}')
             self.append_output(f'❌ YUV 轉換失敗：{e}', 'error')

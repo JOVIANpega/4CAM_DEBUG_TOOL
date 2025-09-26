@@ -318,7 +318,16 @@ class FourCamDebugTool:
             
             # 設定主要字體
             self.primary_font = get_available_font()
-            self.left_font = (self.primary_font, self.left_font_size, 'normal')
+            # 使用命名字體物件，統一控制左側字體大小
+            try:
+                if 'LeftFont' in tkFont.names():
+                    self.left_font = tkFont.nametofont('LeftFont')
+                    self.left_font.configure(family=self.primary_font, size=self.left_font_size, weight='normal')
+                else:
+                    self.left_font = tkFont.Font(name='LeftFont', family=self.primary_font, size=self.left_font_size, weight='normal')
+            except Exception:
+                # 後備方案：建立未命名字體物件
+                self.left_font = tkFont.Font(family=self.primary_font, size=self.left_font_size, weight='normal')
             
             # Windows 11 統一配色方案 - 確保顏色一致性
             colors = {
@@ -342,26 +351,26 @@ class FourCamDebugTool:
             # 設定主視窗背景
             self.root.configure(bg=colors['bg'])
             
-            # 通用按鈕樣式 - 使用檢測到的字體
+            # 通用按鈕樣式 - 使用 LeftFont 命名字體
             style.configure('TButton', 
                           background=colors['button_bg'],
                           foreground=colors['fg'],
                           borderwidth=1,
                           focuscolor='none',
                           padding=(10, 8),
-                          font=(self.primary_font, 10, 'normal'),
+                          font=self.left_font,
                           relief='flat')
             style.map('TButton',
                      background=[('active', colors['button_active']),
                                ('pressed', '#c5c3c1')])
             
-            # 輸入框樣式 - 使用檢測到的字體
+            # 輸入框樣式 - 使用 LeftFont 命名字體
             style.configure('TEntry',
                           fieldbackground=colors['entry_bg'],
                           foreground=colors['fg'],
                           borderwidth=1,
                           insertcolor=colors['fg'],
-                          font=(self.primary_font, 10))
+                          font=self.left_font)
             
             # 標籤頁樣式 - 使用檢測到的字體
             style.configure('TNotebook',
@@ -372,19 +381,19 @@ class FourCamDebugTool:
                           background=colors['tab_bg'],
                           foreground='white',  # 初始就是白色文字
                           padding=(14, 10),
-                          font=(self.primary_font, self.left_font_size, 'normal'))
+                          font=self.left_font)
             style.map('TNotebook.Tab',
                      background=[('selected', colors['tab_selected_bg']),
                                ('active', '#CD853F')],  # 深棕色懸停效果
                      foreground=[('selected', 'black'),
                                ('active', 'white')])
             
-            # 控制按鈕專用樣式 - 使用檢測到的字體
+            # 控制按鈕專用樣式 - 使用 LeftFont 命名字體
             style.configure('Green.TButton', 
                           background=colors['success'], 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, self.left_font_size, 'bold'),
+                          font=self.left_font,
                           relief='flat',
                           borderwidth=0)
             style.map('Green.TButton', 
@@ -394,7 +403,7 @@ class FourCamDebugTool:
                           background=colors['info'], 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, self.left_font_size, 'bold'),
+                          font=self.left_font,
                           relief='flat',
                           borderwidth=0)
             style.map('Blue.TButton', 
@@ -404,7 +413,7 @@ class FourCamDebugTool:
                           background=colors['warning'], 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, self.left_font_size, 'bold'),
+                          font=self.left_font,
                           relief='flat',
                           borderwidth=0)
             style.map('Orange.TButton', 
@@ -414,7 +423,7 @@ class FourCamDebugTool:
                           background='#5c2d91', 
                           foreground='white',
                           padding=(12, 10),
-                          font=(self.primary_font, self.left_font_size, 'bold'),
+                          font=self.left_font,
                           relief='flat',
                           borderwidth=0)
             style.map('Purple.TButton', 
@@ -558,6 +567,16 @@ class FourCamDebugTool:
         self.var_right_font_size = tk.IntVar(value=self.font_size)
         self.var_popup_font_size = tk.IntVar(value=self.popup_font_size)
         
+        # 依設定檔立刻同步左側命名字體大小，避免啟動時使用預設值
+        try:
+            lf = tkFont.nametofont('LeftFont')
+            lf.configure(size=self.left_font_size)
+        except Exception:
+            try:
+                self.left_font = tkFont.Font(name='LeftFont', family=self.primary_font, size=self.left_font_size, weight='normal')
+            except Exception:
+                pass
+        
         self._build_layout()
         self._load_commands_initial()
         
@@ -635,7 +654,7 @@ class FourCamDebugTool:
         # Windows 11 風格主標題 - 使用檢測到的字體
         self.title_label = tk.Label(title_frame, 
                                    text='4CAM DEBUG TOOL', 
-                                   font=(self.primary_font, 24, 'bold'),
+                                   font=(self.primary_font, 24, 'bold'),  # 固定 24，不受 LeftFont 控制
                                    foreground='#006400',  # 深綠色文字
                                    background='#FFFFE0')  # 淡黃色背景
         self.title_label.pack(side=tk.LEFT)
@@ -2572,21 +2591,25 @@ class FourCamDebugTool:
         th.start()
 
     def _apply_left_font_size(self) -> None:
-        """更新左側視窗的字體大小"""
+        """更新左側視窗的字體大小（改用命名字體 LeftFont 全域同步）"""
         try:
-            self.left_font = ('Microsoft JhengHei', self.left_font_size)
+            # 同步命名字體 LeftFont 的尺寸
+            try:
+                lf = tkFont.nametofont('LeftFont')
+                lf.configure(size=self.left_font_size)
+            except Exception:
+                # 若命名字體不存在則重建
+                self.left_font = tkFont.Font(name='LeftFont', family=self.primary_font, size=self.left_font_size, weight='normal')
             
             # 更新所有 ttk 樣式
             try:
                 style = ttk.Style(self.root)
-                # 更新標籤頁樣式
-                style.configure('Brown.TNotebook.Tab', background='#795548', foreground='white', padding=(10, 6), font=self.left_font)
-                # 更新所有 ttk 元件的字體
-                style.configure('TLabel', font=self.left_font)
-                style.configure('TButton', font=self.left_font)
-                style.configure('TEntry', font=self.left_font)
-                style.configure('TCombobox', font=self.left_font)
-                style.configure('TCheckbutton', font=self.left_font)
+                style.configure('TLabel', font='LeftFont')
+                style.configure('TButton', font='LeftFont')
+                style.configure('TEntry', font='LeftFont')
+                style.configure('TCombobox', font='LeftFont')
+                style.configure('TCheckbutton', font='LeftFont')
+                style.configure('TNotebook.Tab', font='LeftFont')
                 # 強制更新樣式
                 style.update()
             except Exception:
@@ -2606,7 +2629,7 @@ class FourCamDebugTool:
                     if hasattr(self, cbo_name):
                         cbo = getattr(self, cbo_name)
                         if cbo and cbo.winfo_exists():
-                            cbo.configure(font=self.left_font)
+                            cbo.configure(font='LeftFont')
                             # 強制重新設定
                             cbo.update()
                 
@@ -2618,7 +2641,7 @@ class FourCamDebugTool:
                     if hasattr(self, ent_name):
                         ent = getattr(self, ent_name)
                         if ent and ent.winfo_exists():
-                            ent.configure(font=self.left_font)
+                            ent.configure(font='LeftFont')
                             # 強制重新設定
                             ent.update()
                 
@@ -2630,18 +2653,18 @@ class FourCamDebugTool:
                 try:
                     # 處理 ttk 元件
                     if isinstance(widget, (ttk.Label, ttk.Button, ttk.Entry, ttk.Combobox, ttk.Checkbutton)):
-                        widget.configure(font=self.left_font)
+                        widget.configure(font='LeftFont')
                         widget.update()
                     # 處理 tk 元件
                     elif isinstance(widget, (tk.Label, tk.Button, tk.Entry, tk.Text, tk.Checkbutton)):
-                        widget.configure(font=self.left_font)
+                        widget.configure(font='LeftFont')
                         widget.update()
                     # 處理有 font 屬性的元件
                     elif hasattr(widget, 'configure'):
                         try:
                             config_options = widget.configure()
                             if 'font' in config_options:
-                                widget.configure(font=self.left_font)
+                                widget.configure(font='LeftFont')
                                 widget.update()
                         except Exception:
                             pass

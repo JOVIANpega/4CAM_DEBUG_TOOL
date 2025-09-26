@@ -233,7 +233,7 @@ class StyleManager:
                               background=self.colors['tab_bg'],
                               foreground=self.colors['fg'],
                               padding=(12, 8),
-                              font=self.font_manager.get_font_tuple(10),
+                              font=self.font_manager.get_font_tuple(11),
                               borderwidth=1)
             
             self.style.map('TNotebook.Tab',
